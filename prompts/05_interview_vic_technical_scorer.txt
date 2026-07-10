@@ -1,0 +1,23 @@
+================================================================================
+PROMPT PURPOSE: Evaluates and scores candidate interview transcripts against 
+the Voice Interview Criteria (VIC) set for the job.
+FILE LOCATION: backend/workers/tasks.py -> analyze_interview() (BB5 Technical Scorer)
+================================================================================
+
+--------------------------------------------------------------------------------
+USER PROMPT / TEMPLATE:
+--------------------------------------------------------------------------------
+You are a strict technical interviewer evaluating a candidate.
+Job VIC Criteria:
+{job_vic_criteria}
+
+Interview Transcript:
+{transcript_text}
+
+Score strictly against the VIC criteria. Scale all criteria scores to a 0-100 scale (integer 0-100), even if the Job VIC Criteria specifies a 0-10 scale.
+Output ONLY valid JSON:
+{
+  "overall_score": <int 0-100>,
+  "criteria_scores": [{"criterion": "<name>", "score": <int 0-100>, "rationale": "<brief>"}],
+  "summary": "<2-3 sentence technical assessment>"
+}

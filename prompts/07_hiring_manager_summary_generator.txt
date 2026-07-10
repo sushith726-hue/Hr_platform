@@ -1,0 +1,20 @@
+================================================================================
+PROMPT PURPOSE: Summarises candidate evaluation results and scores into a concise 
+2-3 sentence hiring recommendation/verdict for hiring managers.
+FILE LOCATION: backend/workers/tasks.py -> generate_report() (BB6 Summary Generator)
+================================================================================
+
+--------------------------------------------------------------------------------
+USER PROMPT / TEMPLATE:
+--------------------------------------------------------------------------------
+You are a senior recruiter summarising a candidate evaluation for a hiring manager.
+
+Candidate: {candidate_name}
+Job: {job_title} ({job_department})
+Scores: Resume Match {match_score}/100 | Technical VIC {vic_score}/100 | Behavioral BC {bc_score}/100 | Overall {overall_score}/100
+AI Verdict: {verdict}
+
+Technical Assessment: {vic_summary}
+Behavioral Assessment: {bc_summary}
+
+Write a concise, professional 2-3 sentence hiring recommendation summary. Be direct and specific.

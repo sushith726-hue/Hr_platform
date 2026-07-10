@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentStream HR Platform</title>
+    <meta name="description" content="TalentStream — AI-powered recruiter dashboard for intelligent candidate evaluation, voice interviews, and hiring decisions.">
+    <link rel="stylesheet" href="style.css?v=1.0.5">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- =============================================
+         MOBILE-ONLY: Top header bar (hamburger + logo)
+         Hidden on desktop via CSS
+         ============================================= -->
+    <header class="mobile-header" id="mobile-header" aria-label="Mobile navigation header">
+        <button id="btn-hamburger" class="mobile-icon-btn" aria-label="Open jobs sidebar" aria-expanded="false" aria-controls="left-panel">
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
+        </button>
+        <span class="mobile-logo">TalentStream</span>
+        <button id="btn-mobile-post-job" class="mobile-icon-btn" aria-label="Post new job" style="font-size:1.4rem;font-weight:600;">+</button>
+    </header>
+
+    <!-- =============================================
+         MOBILE-ONLY: Overlay backdrop for left drawer
+         ============================================= -->
+    <div id="left-drawer-backdrop" class="drawer-backdrop" aria-hidden="true"></div>
+
+    <div class="app-container">
+        <!-- LEFT PANEL (20% width desktop / slide-in drawer mobile): Job listing and management -->
+        <aside class="left-panel" id="left-panel" aria-label="Job sidebar">
+            <!-- Mobile close row inside left panel -->
+            <div class="left-panel-mobile-header">
+                <span class="mobile-logo" style="font-weight:700;">Jobs</span>
+                <button id="btn-close-left-drawer" class="mobile-icon-btn" aria-label="Close sidebar">✕</button>
+            </div>
+            <div class="panel-header">
+                <h1 class="logo">TalentStream</h1>
+            </div>
+            <div class="job-list-container">
+                <div class="job-section" id="open-jobs-section">
+                    <div class="accordion-header" id="open-jobs-header" aria-expanded="true">
+                        <span class="accordion-arrow">▼</span>
+                        <span class="accordion-title">Open Jobs</span>
+                        <span class="job-count-badge" id="open-jobs-count">0</span>
+                    </div>
+                    <div class="accordion-content" id="open-jobs-content">
+                        <ul id="open-jobs-list" class="job-list">
+                            <!-- Open Jobs injected here -->
+                        </ul>
+                    </div>
+                </div>
+                <div class="job-section" id="closed-jobs-section">
+                    <div class="accordion-header" id="closed-jobs-header" aria-expanded="false">
+                        <span class="accordion-arrow">▶</span>
+                        <span class="accordion-title">Closed Jobs</span>
+                        <span class="job-count-badge" id="closed-jobs-count">0</span>
+                    </div>
+                    <div class="accordion-content collapsed" id="closed-jobs-content">
+                        <ul id="closed-jobs-list" class="job-list">
+                            <!-- Closed Jobs injected here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="left-panel-footer">
+                <button id="btn-post-job" class="btn btn-primary">+ Post Job</button>
+            </div>
+        </aside>
+
+        <!-- Resize Handle 1 -->
+        <div class="resize-handle" id="resize-handle-1"></div>
+
+        <!-- MIDDLE PANEL (50% width desktop / full width mobile): Candidate listings and search -->
+        <main class="middle-panel" id="middle-panel" aria-label="Candidate list">
+            <div id="upload-batch-summary" class="upload-batch-summary" style="display: none; padding: 0.8rem 1.2rem; border-bottom: 1px solid var(--border-color); background-color: var(--bg-panel); font-size: 0.85rem; color: var(--text-main);"></div>
+            <header class="search-header">
+                <div class="search-bar">
+                    <input type="text" id="candidate-search" placeholder="Search candidates...">
+                    <button id="btn-search-clear" class="btn btn-icon" style="display: none;">✕</button>
+                </div>
+                <div class="filter-controls">
+                    <select id="sort-control">
+                        <option value="score_desc">Score: High to Low</option>
+                        <option value="score_asc">Score: Low to High</option>
+                        <option value="newest">Newest First</option>
+                    </select>
+                    <button id="btn-open-upload" class="btn btn-secondary" style="display: none;">Upload Resumes</button>
+                </div>
+                <div class="status-chips-container" id="status-chips-container"></div>
+            </header>
+
+            <!-- Candidate List -->
+            <section class="candidates-list-container">
+                <div id="candidates-list" class="candidates-list">
+                    <!-- Candidate cards injected here -->
+                    <div class="no-candidates-msg">
+                        Select a job from the sidebar or create a new job to start evaluating candidates.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pagination Bar -->
+            <div id="pagination-bar" class="pagination-bar" style="display: none;">
+                <div class="pagination-left">
+                    <button id="btn-prev-page" class="btn btn-secondary btn-sm" disabled>Prev</button>
+                    <div id="pagination-pages-buttons" class="pagination-pages-buttons"></div>
+                    <button id="btn-next-page" class="btn btn-secondary btn-sm" disabled>Next</button>
+                </div>
+                <div class="pagination-info" id="pagination-info">
+                    Page 1 of 1 (0 total)
+                </div>
+                <div class="pagination-right">
+                    <span class="jump-label">Jump:</span>
+                    <input type="number" id="input-jump-page" class="input-jump-page" min="1" placeholder="Page">
+                    <button id="btn-toggle-show-all" class="btn btn-secondary btn-sm">Show All</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Resize Handle 2 -->
+        <div class="resize-handle" id="resize-handle-2"></div>
+
+        <!-- RIGHT PANEL (30% width desktop / full-screen overlay mobile): Expanded Profile and evaluations -->
+        <section class="right-panel" id="right-panel" aria-label="Candidate detail panel">
+
+            <!-- Mobile-only back button header inside right panel -->
+            <div class="right-panel-mobile-header" id="right-panel-mobile-header">
+                <button id="btn-close-right-drawer" class="mobile-icon-btn" aria-label="Back to candidates list">
+                    ← Back
+                </button>
+                <span id="mobile-candidate-name-header" style="font-size:0.9rem;font-weight:600;color:var(--text-main);flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 0.5rem;"></span>
+            </div>
+
+            <div id="no-profile-selected" class="no-profile-selected">
+                <div class="empty-state-card">
+                    <div class="empty-state-icon-container">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="3" width="18" height="18" rx="2" stroke="url(#empty-gradient)" stroke-width="1.5"/>
+                            <path d="M7 8H17" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M7 12H13" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+                            <circle cx="16" cy="14" r="3" stroke="#2563eb" stroke-width="1.5"/>
+                            <path d="M16 17V19" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
+                            <defs>
+                                <linearGradient id="empty-gradient" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#3b82f6"/>
+                                    <stop offset="1" stop-color="#2563eb"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <h3 class="empty-state-title">Candidate Evaluation</h3>
+                    <p class="empty-state-description">Select a candidate from the middle panel to view their parsed resume, AI analytics report, behavioral metrics, and live interview details.</p>
+                    <div class="empty-state-hints">
+                        <div class="hint-item">
+                            <span class="hint-dot shortlist"></span>
+                            <span>Review Match Scores & Shortlist</span>
+                        </div>
+                        <div class="hint-item">
+                            <span class="hint-dot interview"></span>
+                            <span>Launch Live Voice Interviews</span>
+                        </div>
+                        <div class="hint-item">
+                            <span class="hint-dot feedback"></span>
+                            <span>Track Behavioral Feedback</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="profile-details" class="profile-details" style="display: none;">
+                <div class="profile-header">
+                    <div class="profile-title">
+                        <h2 id="detail-candidate-name">Candidate Name</h2>
+                        <span id="detail-candidate-status" class="badge">Status</span>
+                    </div>
+                    <div class="score-overall-badge">
+                        <span class="score-label">Score</span>
+                        <span id="detail-overall-score" class="score-val">-</span>
+                    </div>
+                </div>
+
+                <!-- Tabs Navigation -->
+                <nav class="profile-tabs" aria-label="Candidate evaluation tabs">
+                    <button class="tab-btn active" data-tab="resume">Resume</button>
+                    <button class="tab-btn" data-tab="resume-rpt">Resume Rpt</button>
+                    <button class="tab-btn" data-tab="interview">Interview</button>
+                    <button class="tab-btn" data-tab="behavioral">Behavioral</button>
+                    <button class="tab-btn" data-tab="overall">Overall</button>
+                    <button class="tab-btn" data-tab="hr-notes">HR Notes</button>
+                </nav>
+
+                <!-- Tabs Content Panels -->
+                <div class="tabs-content">
+                    <div id="tab-resume" class="tab-panel active">
+                        <div class="resume-viewer-container" style="margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4 style="margin: 0; font-size: 1rem; color: var(--text-main);">Original Resume</h4>
+                                <a id="btn-download-resume" href="#" target="_blank" download class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem; display: none; align-items: center; gap: 4px; text-decoration: none; font-weight: 600;">
+                                    <span>⬇️ Download Original</span>
+                                </a>
+                            </div>
+                            <div id="resume-frame-container" style="border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; background: #f8fafc; height: 500px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <!-- iframe or fallback will be injected here -->
+                            </div>
+                        </div>
+                        <div class="card-meta">
+                            <p><strong>Email:</strong> <span id="detail-email">-</span></p>
+                            <p><strong>Phone:</strong> <span id="detail-phone">-</span></p>
+                            <p><strong>Location:</strong> <span id="detail-location">-</span></p>
+                            <p><strong>Experience:</strong> <span id="detail-experience">-</span></p>
+                        </div>
+                        <h3>Skills</h3>
+                        <div id="detail-skills" class="skills-wrap"></div>
+                    </div>
+                    
+                    <div id="tab-resume-rpt" class="tab-panel">
+                        <h3>Match Analysis</h3>
+                        <div id="detail-match-breakdown" class="breakdown-list"></div>
+                    </div>
+
+                    <div id="tab-interview" class="tab-panel">
+                        <h3>Interview Technical Review</h3>
+                        <div id="detail-interview-vic" class="vic-list"></div>
+                    </div>
+
+                    <div id="tab-behavioral" class="tab-panel">
+                        <h3>Behavioral Voice Metrics</h3>
+                        <div id="detail-behavioral-bc"></div>
+                    </div>
+
+                    <div id="tab-overall" class="tab-panel">
+                        <div id="detail-overall-summary"></div>
+                        <div id="overall-actions-container" style="margin-top: 1.5rem; display: none; gap: 1rem; justify-content: center;">
+                            <button id="btn-decision-hire" class="btn btn-decision-hire">Hire</button>
+                            <button id="btn-decision-reject" class="btn btn-decision-reject">Not Selected</button>
+                        </div>
+                        <div id="overall-decision-status" style="margin-top: 1.5rem; display: none; text-align: center; font-weight: 600; font-size: 0.95rem;"></div>
+                    </div>
+
+                    <div id="tab-hr-notes" class="tab-panel">
+                        <div class="notes-container" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                            <h3 style="margin-top: 0;">Recruiter Notes</h3>
+                            <div class="add-note-card" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                                <textarea id="notes-textarea" placeholder="Add custom evaluations or notes..." style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; resize: vertical; font-family: var(--font-primary); font-size: 0.9rem; background: var(--bg-app); color: var(--text-main); outline: none; transition: border-color 0.2s;"></textarea>
+                                <div style="display: flex; justify-content: flex-end;">
+                                    <button id="btn-save-note" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600;">Save Note</button>
+                                </div>
+                            </div>
+                            <div id="notes-list-container" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 400px; overflow-y: auto; padding-right: 4px;">
+                                <!-- Notes will be rendered here dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Footer Panel -->
+                <footer class="profile-footer">
+                    <button id="btn-action-reject" class="btn btn-danger">Reject</button>
+                    <button id="btn-action-shortlist" class="btn btn-secondary">Shortlist</button>
+                    <button id="btn-action-invite" class="btn btn-primary">Invite for Interview</button>
+                    <!-- Phase 7 final hiring actions (shown only after interview analysis) -->
+                    <button id="btn-download-pdf" class="btn btn-secondary" style="display:none;">⬇ PDF Report</button>
+                    <button id="btn-action-hire" class="btn btn-success" style="display:none;">✓ Hire</button>
+                    <button id="btn-action-reject-post" class="btn btn-danger" style="display:none;">✕ Reject</button>
+                </footer>
+            </div>
+        </section>
+    </div>
+
+    <!-- =============================================
+         MOBILE-ONLY: Bottom Navigation Bar
+         ============================================= -->
+    <nav class="bottom-nav" id="bottom-nav" aria-label="Mobile bottom navigation">
+        <button class="bottom-nav-btn active" id="bn-jobs" data-view="jobs" aria-label="Jobs">
+            <span class="bottom-nav-icon">💼</span>
+            <span class="bottom-nav-label">Jobs</span>
+        </button>
+        <button class="bottom-nav-btn" id="bn-candidates" data-view="candidates" aria-label="Candidates">
+            <span class="bottom-nav-icon">👥</span>
+            <span class="bottom-nav-label">Candidates</span>
+        </button>
+        <button class="bottom-nav-btn" id="bn-reports" data-view="reports" aria-label="Reports">
+            <span class="bottom-nav-icon">📊</span>
+            <span class="bottom-nav-label">Reports</span>
+        </button>
+    </nav>
+
+    <!-- Upload Resumes Modal -->
+    <div id="modal-upload-resumes" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h2>Upload Resumes</h2>
+                <button id="modal-upload-close" class="btn-close">✕</button>
+            </header>
+            <div class="modal-body" style="padding: 1rem 0; display: flex; flex-direction: column; gap: 1rem;">
+
+                <!-- Batch History Panel (session-scoped, shown when there are past batches) -->
+                <div id="upload-batch-history" style="display: none; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+                    <div style="padding: 0.6rem 1rem; background: #f1f5f9; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">This Session</span>
+                    </div>
+                    <div id="upload-batch-history-list" style="max-height: 220px; overflow-y: auto;"></div>
+                </div>
+
+                <!-- Drag-and-drop resume upload zone -->
+                <div id="upload-zone" class="upload-zone">
+                    <div class="upload-icon-container">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 16V8M12 8L9 11M12 8L15 11" stroke="url(#upload-gradient)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M3 15V16C3 18.2091 4.79086 20 7 20H17C19.2091 20 21 18.2091 21 16V15" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+                            <defs>
+                                <linearGradient id="upload-gradient" x1="12" y1="8" x2="12" y2="16" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#3b82f6"/>
+                                    <stop offset="1" stop-color="#2563eb"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <h3 class="upload-zone-title">Upload Candidate Resumes</h3>
+                    <p class="upload-zone-description">Drag & drop files here or <span class="browse-link">browse</span> to upload</p>
+                    <span class="upload-zone-formats">Supported formats: PDF, DOCX, TXT (Max 10MB)</span>
+                    <input type="file" id="resume-file-input" multiple style="display: none;" accept=".pdf,.docx,.txt">
+                </div>
+
+                <!-- Upload Progress & Status Area (shown during and after drops/selects) -->
+                <div id="upload-progress-container" class="upload-progress-container" style="display: none; border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; background-color: var(--bg-sidebar);">
+                    <div class="progress-header" style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main);">
+                        <span id="upload-progress-text">Uploading...</span>
+                        <span id="upload-progress-percent">0%</span>
+                    </div>
+                    <div class="progress-bar-bg" style="width: 100%; height: 6px; background-color: #cbd5e1; border-radius: 3px; overflow: hidden; margin-bottom: 1rem;">
+                        <div id="upload-progress-bar" style="width: 0%; height: 100%; background-color: var(--color-primary); transition: width 0.3s ease;"></div>
+                    </div>
+                    <div id="upload-files-list" class="upload-files-list" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Mini-cards for each file status will go here -->
+                    </div>
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button type="button" id="modal-upload-cancel" class="btn btn-secondary">Close</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Post Job Modal -->
+    <div id="modal-post-job" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h2>Post New Job</h2>
+                <button id="modal-close" class="btn-close">✕</button>
+            </header>
+            <form id="form-post-job" class="modal-form">
+                <div class="form-group">
+                    <label for="job-title">Job Title</label>
+                    <input type="text" id="job-title" required placeholder="e.g. Senior Backend Engineer">
+                </div>
+                <div class="form-group">
+                    <label for="job-dept">Department</label>
+                    <input type="text" id="job-dept" required placeholder="e.g. Engineering">
+                </div>
+                <div class="form-group">
+                    <label for="job-jd">Job Description (JD)</label>
+                    <textarea id="job-jd" required placeholder="Describe the role and responsibilities..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="job-rvc">Resume Verification Criteria (RVC)</label>
+                    <textarea id="job-rvc" required placeholder="Mandatory requirements used to score resumes..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="job-vic">Voice Interview Criteria (VIC)</label>
+                    <textarea id="job-vic" required placeholder="Questions/topics the AI bot should ask candidate..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="job-bc">Behavioral Criteria (BC)</label>
+                    <textarea id="job-bc" required placeholder="Qualities looked for during the speech analysis..."></textarea>
+                </div>
+                <footer class="modal-footer">
+                    <button type="button" id="modal-cancel" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Post Job</button>
+                </footer>
+            </form>
+        </div>
+    </div>
+
+    <!-- Close Job Warning Modal -->
+    <div id="modal-close-job-warning" class="modal-overlay" style="display: none; z-index: 1100;">
+        <div class="modal-content" style="max-width: 450px;">
+            <header class="modal-header">
+                <h2>Undecided Candidates</h2>
+                <button id="modal-close-warning-x" class="btn-close">✕</button>
+            </header>
+            <div class="modal-body" style="padding: 1.5rem 0; font-size: 0.95rem; line-height: 1.5;">
+                <p id="close-job-warning-text"></p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">Warning: These candidates will be hidden once the job is closed.</p>
+            </div>
+            <footer class="modal-footer" style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button id="btn-warning-review-now" class="btn btn-secondary">Review Now</button>
+                <button id="btn-warning-close-anyway" class="btn btn-danger">Close Anyway</button>
+            </footer>
+        </div>
+    </div>
+
+    <script src="app.js?v=1.0.5"></script>
+</body>
+</html>

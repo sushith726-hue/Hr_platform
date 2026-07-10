@@ -1,0 +1,11 @@
+John Doe
+Email: john.doe@example.com
+Phone: +1-555-0199
+Experience:
+Senior Backend Engineer at Acme Corp (2021 - Present)
+- Designed and built scalable microservices using Python, FastAPI, and PostgreSQL.
+- Implemented real-time processing pipelines using Redis and Celery.
+Software Engineer at Tech Solutions (2018 - 2021)
+- Developed RESTful APIs in Python.
+Skills: Python, FastAPI, SQL, Postgres, Redis, Celery, S3, Docker, Git.
+Education: B.S. in Computer Science.

@@ -1,0 +1,13 @@
+hr-platform/.env
+.env
+*.pyc
+__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+graphify-out/cache/
+extract_semantic.py
+label_communities.py

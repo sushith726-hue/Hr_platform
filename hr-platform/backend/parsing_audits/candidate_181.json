@@ -1,0 +1,93 @@
+{
+  "candidate_id": 181,
+  "timestamp": "2026-07-09T05:28:25.375801",
+  "raw_llama_parse_output": "Vyshak K V\n +91 90664 51312 |   vyshakvyshu142@gmail.com |         Bangalore, India\n                     \u2709\ufe0f\n linkedin.com/in/vyshak-kv-66244a264\nProfessional Summary\nIT Infrastructure and Monitoring Specialist with over 8 years of experience in system\nadministration, server monitoring, and enterprise IT support. Skilled in Zabbix, ServiceNow,\nand incident management with a strong focus on reliability, uptime, and quick issue\nresolution. Experienced in handling on-premise infrastructure and learning modern\nmonitoring and automation tools for improved efficiency.\nCore Skills\nSystem Administration: Windows & Linux servers, Active Directory, Access Management\nMonitoring Tools: Zabbix (Certified), Nagios, SolarWinds, Site24x7, PagerDuty\nIT Service Management: ITIL Framework, Incident & Problem Management, ServiceNow\nSecurity & Compliance: MFA, Access Control, Vulnerability Tracking (Kenna Security)\nNetworking: LAN/WAN, Firewalls, Patch Management, Backups\nCurrently Learning: PowerShell scripting, Azure Fundamentals\nProfessional Experience\n Epicor Software India Pvt. Ltd., Bangalore\nMonitoring & IT Infrastructure Engineer | Jan 2024 \u2013 Present\n\u2022 Configured and maintained monitoring systems (Zabbix, SolarWinds, Site24x7)\n\u2022 Reduced false alerts by 30% through optimized monitoring setup\n\u2022 Supported IT infrastructure teams in resolving high-priority incidents\n\u2022 Performed server health checks, alert tuning, and uptime reporting\n\u2022 Collaborated with security teams on vulnerability remediation tasks\n Tata Consultancy Services (TCS), Bangalore\nIT Analyst | Dec 2021 \u2013 Jun 2023\n\u2022 Managed enterprise-level Active Directory and account provisioning\n\u2022 Automated daily user access operations, improving response time\n\u2022 Resolved incidents and service requests under ITIL framework\n\u2022 Worked closely with global teams to maintain SLA compliance\n\n\nIDC Technologies (I) Pvt. Ltd., Bangalore\nIT Support Engineer | Jul 2018 \u2013 Nov 2021\n\u2022 Handled system and network support for 1000+ users\n\u2022 Managed account permissions and group policies in AD\n\u2022 Supported enterprise applications like Outlook, IBM Notes, and productivity tools\nEastern Condiments Pvt. Ltd., Bangalore\nIT Officer | Jan 2018 \u2013 Jul 2018\n\u2022 Maintained servers, firewalls, and daily backups\n\u2022 Monitored uptime and system performance across departments\nNelito Systems Ltd., Bangalore\nIT Support Engineer | Aug 2016 \u2013 Jan 2018\n\u2022 Supported core banking software deployment and troubleshooting\n\u2022 Ensured stable performance during client rollouts\nEducation\nDiploma \u2013 NTTF, Bangalore (2012\u20132015)\n12th \u2013 Kerala State Board (2012)\n10th \u2013 Kerala State Board (2010)\nCertifications\nZabbix Certified Professional\nITIL Foundation (V3, TCS \u2013 2023)\nCareer Objective\nTo work as an IT Infrastructure or Monitoring Engineer, supporting enterprise systems\nwith reliability, uptime, and security, while growing skills in automation and cloud-based\nmonitoring.",
+  "gpt_prompt": "Extract the following JSON from the resume text below.\nReturn ONLY a valid JSON object with these exact keys. Do not add any text outside the JSON.\n\n{\n  \"name\": null,\n  \"email\": null,\n  \"phone\": null,\n  \"location\": null,\n  \"skills\": [],\n  \"experience_years\": 0,\n  \"education\": [\n    {\"school\": null, \"degree\": null, \"year\": null}\n  ],\n  \"experience\": [\n    {\n      \"company\": null,\n      \"title\": null,\n      \"start_date\": null,\n      \"end_date\": null,\n      \"duration\": null,\n      \"description\": null\n    }\n  ],\n  \"projects\": [\n    {\n      \"title\": null,\n      \"description\": null,\n      \"technologies\": [],\n      \"duration\": null\n    }\n  ],\n  \"certifications\": [],\n  \"languages\": []\n}\n\nRULES REMINDER:\n- experience[] = PAID EMPLOYMENT ONLY (salary/wage from a real employer).\n- projects[] = everything else: university capstones, personal projects,   hackathons, open-source, internships listed without company, etc.\n- experience_years = always 0 (Python calculates this, not you).\n- If experience[] is empty (no paid employment found), that is correct.\n- Do NOT invent company names. If no employer name exists for a role,   set company to null and move the entry to projects[].\n- start_date and end_date: copy the exact text from the resume   (e.g. 'Jan 2023', '2023-01', 'Present'). null if not written.\n\nResume text:\nVyshak K V\n +91 90664 51312 |   vyshakvyshu142@gmail.com |         Bangalore, India\n                     \u2709\ufe0f\n linkedin.com/in/vyshak-kv-66244a264\nProfessional Summary\nIT Infrastructure and Monitoring Specialist with over 8 years of experience in system\nadministration, server monitoring, and enterprise IT support. Skilled in Zabbix, ServiceNow,\nand incident management with a strong focus on reliability, uptime, and quick issue\nresolution. Experienced in handling on-premise infrastructure and learning modern\nmonitoring and automation tools for improved efficiency.\nCore Skills\nSystem Administration: Windows & Linux servers, Active Directory, Access Management\nMonitoring Tools: Zabbix (Certified), Nagios, SolarWinds, Site24x7, PagerDuty\nIT Service Management: ITIL Framework, Incident & Problem Management, ServiceNow\nSecurity & Compliance: MFA, Access Control, Vulnerability Tracking (Kenna Security)\nNetworking: LAN/WAN, Firewalls, Patch Management, Backups\nCurrently Learning: PowerShell scripting, Azure Fundamentals\nProfessional Experience\n Epicor Software India Pvt. Ltd., Bangalore\nMonitoring & IT Infrastructure Engineer | Jan 2024 \u2013 Present\n\u2022 Configured and maintained monitoring systems (Zabbix, SolarWinds, Site24x7)\n\u2022 Reduced false alerts by 30% through optimized monitoring setup\n\u2022 Supported IT infrastructure teams in resolving high-priority incidents\n\u2022 Performed server health checks, alert tuning, and uptime reporting\n\u2022 Collaborated with security teams on vulnerability remediation tasks\n Tata Consultancy Services (TCS), Bangalore\nIT Analyst | Dec 2021 \u2013 Jun 2023\n\u2022 Managed enterprise-level Active Directory and account provisioning\n\u2022 Automated daily user access operations, improving response time\n\u2022 Resolved incidents and service requests under ITIL framework\n\u2022 Worked closely with global teams to maintain SLA compliance\n\n\nIDC Technologies (I) Pvt. Ltd., Bangalore\nIT Support Engineer | Jul 2018 \u2013 Nov 2021\n\u2022 Handled system and network support for 1000+ users\n\u2022 Managed account permissions and group policies in AD\n\u2022 Supported enterprise applications like Outlook, IBM Notes, and productivity tools\nEastern Condiments Pvt. Ltd., Bangalore\nIT Officer | Jan 2018 \u2013 Jul 2018\n\u2022 Maintained servers, firewalls, and daily backups\n\u2022 Monitored uptime and system performance across departments\nNelito Systems Ltd., Bangalore\nIT Support Engineer | Aug 2016 \u2013 Jan 2018\n\u2022 Supported core banking software deployment and troubleshooting\n\u2022 Ensured stable performance during client rollouts\nEducation\nDiploma \u2013 NTTF, Bangalore (2012\u20132015)\n12th \u2013 Kerala State Board (2012)\n10th \u2013 Kerala State Board (2010)\nCertifications\nZabbix Certified Professional\nITIL Foundation (V3, TCS \u2013 2023)\nCareer Objective\nTo work as an IT Infrastructure or Monitoring Engineer, supporting enterprise systems\nwith reliability, uptime, and security, while growing skills in automation and cloud-based\nmonitoring.",
+  "gpt_raw_response": "{\n  \"name\": \"Vyshak K V\",\n  \"email\": \"vyshakvyshu142@gmail.com\",\n  \"phone\": \"+91 90664 51312\",\n  \"location\": \"Bangalore, India\",\n  \"skills\": [\n    \"System Administration: Windows & Linux servers\",\n    \"Active Directory\",\n    \"Access Management\",\n    \"Monitoring Tools: Zabbix (Certified), Nagios, SolarWinds, Site24x7, PagerDuty\",\n    \"IT Service Management: ITIL Framework, Incident & Problem Management, ServiceNow\",\n    \"Security & Compliance: MFA, Access Control, Vulnerability Tracking (Kenna Security)\",\n    \"Networking: LAN/WAN, Firewalls, Patch Management, Backups\",\n    \"Currently Learning: PowerShell scripting, Azure Fundamentals\"\n  ],\n  \"experience_years\": 0,\n  \"education\": [\n    {\"school\": \"NTTF, Bangalore\", \"degree\": \"Diploma\", \"year\": \"2015\"},\n    {\"school\": \"Kerala State Board\", \"degree\": \"12th\", \"year\": \"2012\"},\n    {\"school\": \"Kerala State Board\", \"degree\": \"10th\", \"year\": \"2010\"}\n  ],\n  \"experience\": [\n    {\n      \"company\": \"Epicor Software India Pvt. Ltd.\",\n      \"title\": \"Monitoring & IT Infrastructure Engineer\",\n      \"start_date\": \"Jan 2024\",\n      \"end_date\": \"Present\",\n      \"duration\": null,\n      \"description\": \"Configured and maintained monitoring systems (Zabbix, SolarWinds, Site24x7). Reduced false alerts by 30% through optimized monitoring setup. Supported IT infrastructure teams in resolving high-priority incidents. Performed server health checks, alert tuning, and uptime reporting. Collaborated with security teams on vulnerability remediation tasks.\"\n    },\n    {\n      \"company\": \"Tata Consultancy Services (TCS)\",\n      \"title\": \"IT Analyst\",\n      \"start_date\": \"Dec 2021\",\n      \"end_date\": \"Jun 2023\",\n      \"duration\": null,\n      \"description\": \"Managed enterprise-level Active Directory and account provisioning. Automated daily user access operations, improving response time. Resolved incidents and service requests under ITIL framework. Worked closely with global teams to maintain SLA compliance.\"\n    },\n    {\n      \"company\": \"IDC Technologies (I) Pvt. Ltd.\",\n      \"title\": \"IT Support Engineer\",\n      \"start_date\": \"Jul 2018\",\n      \"end_date\": \"Nov 2021\",\n      \"duration\": null,\n      \"description\": \"Handled system and network support for 1000+ users. Managed account permissions and group policies in AD. Supported enterprise applications like Outlook, IBM Notes, and productivity tools.\"\n    },\n    {\n      \"company\": \"Eastern Condiments Pvt. Ltd.\",\n      \"title\": \"IT Officer\",\n      \"start_date\": \"Jan 2018\",\n      \"end_date\": \"Jul 2018\",\n      \"duration\": null,\n      \"description\": \"Maintained servers, firewalls, and daily backups. Monitored uptime and system performance across departments.\"\n    },\n    {\n      \"company\": \"Nelito Systems Ltd.\",\n      \"title\": \"IT Support Engineer\",\n      \"start_date\": \"Aug 2016\",\n      \"end_date\": \"Jan 2018\",\n      \"duration\": null,\n      \"description\": \"Supported core banking software deployment and troubleshooting. Ensured stable performance during client rollouts.\"\n    }\n  ],\n  \"projects\": [],\n  \"certifications\": [\n    \"Zabbix Certified Professional\",\n    \"ITIL Foundation (V3, TCS \u2013 2023)\"\n  ],\n  \"languages\": []\n}",
+  "validation_errors": [],
+  "final_structured_json": {
+    "name": "Vyshak K V",
+    "email": "vyshakvyshu142@gmail.com",
+    "phone": "+91 90664 51312",
+    "skills": [
+      "System Administration: Windows & Linux servers",
+      "Active Directory",
+      "Access Management",
+      "Monitoring Tools: Zabbix (Certified), Nagios, SolarWinds, Site24x7, PagerDuty",
+      "IT Service Management: ITIL Framework, Incident & Problem Management, ServiceNow",
+      "Security & Compliance: MFA, Access Control, Vulnerability Tracking (Kenna Security)",
+      "Networking: LAN/WAN, Firewalls, Patch Management, Backups",
+      "Currently Learning: PowerShell scripting, Azure Fundamentals"
+    ],
+    "experience_years": 9.3,
+    "education": [
+      {
+        "school": "NTTF, Bangalore",
+        "degree": "Diploma",
+        "year": "2015"
+      },
+      {
+        "school": "Kerala State Board",
+        "degree": "12th",
+        "year": "2012"
+      },
+      {
+        "school": "Kerala State Board",
+        "degree": "10th",
+        "year": "2010"
+      }
+    ],
+    "experience": [
+      {
+        "company": "Epicor Software India Pvt. Ltd.",
+        "title": "Monitoring & IT Infrastructure Engineer",
+        "start_date": "Jan 2024",
+        "end_date": "Present",
+        "duration": null,
+        "description": "Configured and maintained monitoring systems (Zabbix, SolarWinds, Site24x7). Reduced false alerts by 30% through optimized monitoring setup. Supported IT infrastructure teams in resolving high-priority incidents. Performed server health checks, alert tuning, and uptime reporting. Collaborated with security teams on vulnerability remediation tasks."
+      },
+      {
+        "company": "Tata Consultancy Services (TCS)",
+        "title": "IT Analyst",
+        "start_date": "Dec 2021",
+        "end_date": "Jun 2023",
+        "duration": null,
+        "description": "Managed enterprise-level Active Directory and account provisioning. Automated daily user access operations, improving response time. Resolved incidents and service requests under ITIL framework. Worked closely with global teams to maintain SLA compliance."
+      },
+      {
+        "company": "IDC Technologies (I) Pvt. Ltd.",
+        "title": "IT Support Engineer",
+        "start_date": "Jul 2018",
+        "end_date": "Nov 2021",
+        "duration": null,
+        "description": "Handled system and network support for 1000+ users. Managed account permissions and group policies in AD. Supported enterprise applications like Outlook, IBM Notes, and productivity tools."
+      },
+      {
+        "company": "Eastern Condiments Pvt. Ltd.",
+        "title": "IT Officer",
+        "start_date": "Jan 2018",
+        "end_date": "Jul 2018",
+        "duration": null,
+        "description": "Maintained servers, firewalls, and daily backups. Monitored uptime and system performance across departments."
+      },
+      {
+        "company": "Nelito Systems Ltd.",
+        "title": "IT Support Engineer",
+        "start_date": "Aug 2016",
+        "end_date": "Jan 2018",
+        "duration": null,
+        "description": "Supported core banking software deployment and troubleshooting. Ensured stable performance during client rollouts."
+      }
+    ],
+    "projects": [],
+    "location": "Bangalore, India",
+    "certifications": [
+      "Zabbix Certified Professional",
+      "ITIL Foundation (V3, TCS \u2013 2023)"
+    ],
+    "languages": []
+  },
+  "mismatches_audit": {
+    "experience_years": "Experience years value 9.3 is not explicitly mentioned in the text (likely inferred/calculated)."
+  }
+}

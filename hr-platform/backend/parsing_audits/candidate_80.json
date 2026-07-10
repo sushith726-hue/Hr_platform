@@ -1,0 +1,80 @@
+{
+  "candidate_id": 80,
+  "timestamp": "2026-07-08T11:26:55.400279",
+  "raw_llama_parse_output": "      CURRICULUM VITAE\n\n       Prabhuswamy M S\n D             +91 8867792583\n\n        <u>prabhuswamyms1995@gmail.com</u>\n\nObjective:\nSecure a responsible career opportunity to fully utilize my training and skills, while making a\nsignificant contribution to the success of the company.\n\n EDUCATIONALQUALIFICATION\n       Course      Name of Institution               University         Yearof                  Percentage\n                                                                        Passing\n       B.E.        Ghousia College of                V.T.U              2017                    61.01%\n       (EEE)       Engineering, Ramanagaram.         Belagavi\n       P.U.C.      Bharathi College,                 Pre University     2013                    52.33%\n       (PCMB)      Bharathinagara,                   EducationBangalore\n                   Maddhur (T), Mandya\n                   (D)\n       S.S.L.C     Government Highschool,            K.S.E.E.B          2011                    60.16%\n                   Shivanasamudram.\n\nCertification: I had done course on hardware, networking, server and CCNA.at Jetking Rajajinagar\n Experience\n Organization     : Kalpa electrical Pvt Ltd\n Period           : FEB 2021 to July 2023\n Designation      : Testing Engineer and Desktop support engineer\n\nExperience\nOrganization: Ujjivan Small Finance Bank (HO)\nPeriod            : Aug 2023 to Sep2024\nFranchisee        : 3i-infotechConsultancyPvt. Ltd.\nDesignation       : System Administrator\n\nRoles and Responsibility:\n\n  x     Installation Of Windows 10 and windows 11 operating Systemand troubleshooting.\n  x     98% Infra availability, network monitor and Co-ordination with network team.\n  x     Managing NLT,RLT, And VIP user at HO .On top priority.\n  x     Done root cause analysis for repeated issues.\n  x     Board meeting , VC support, at HO.\n  x     Host inventory Management and maintaining inventory details like IP\u2019s, network\n        link details call log reports.\n  x     Quarterly asset declaration reports for HO and FFS clearance and data backup.\n\n\nx     Project rollout like printer, manage engine and other project from business end.\nx     Maintenance, windows patch, basic application upgradation, laptop\n      encryption, identify and removal of prohibited software.\nx     Maintaining Active Directory User and Computer accounts\nx     Experience in LAN/WAN Troubleshooting.\nx     Provided desktop and laptop support for over 2000 users.\nx     Install and configure printer MS Office, Anti-Virus, Other Applications on Desktop\nx     Coordinating with Security team for policy upgradation.\nx     Providing LAN connectivity through IP phones by trunking the switch port\nx     Addressing user tickets related to software, hardware and networking.\nx     Directing unresolved calls to the next level ofsupport\nx     Providing remote support to the next level Engineers during installation\nx     Speak to customers via emails and phone for initial requirement\nx     Monitoring Health, CPU Processor and RAM Utilization Access Switch\u2019s and core\n      switch\u2019s.\nx     Monitor and resolve the IT related issues within SLA based on priority.\nx     Preparing technical documents and manuals.\nx     Configuring Email Clients on Outlook\nx     CISCO Jabber installation and T-Shoot.\n\n\n\n\n\n Experience :\nOrganization : A20 Construction Pvt Ltd\nPeriod          : oct 2024 to Till Date\nFranchisee      : Indian Railway\nDesignation     : Network Engineer\n\nRoles and Responsibility:\n x     Router configuration and Wi- Fi installation.\n x     Network issue checked at user end.\n x     Server maintenance and manage.\n x     VC meeting, Webex meeting and local meeting connected.\n x     CCTV Configuration and maintenance.\n x     UTP cable crimping.\n x     User static Ip maintenance and manage.\n x     User end application not working attended and resolved.\n x     Daily routing all series Wi fi checked and maintenance.\n\n\n      Skill Summary:\nx     Ticketing Tools: Service desk,\nx     Remote support Tools: Manage engine.\nx     Different Layers ofOSI Model and TCP/IP model.\nx     Ethernet protocol base versions\nx     Modes ofcommunication and Casting ofcommunication\nx     IPv4 and IPv6 Classification\nx     Different types ofcomputer networks\nx     Server installation, configuration and managing the roles ofserver\nx     Experience in LAN/WAN Troubleshooting.\n\n\n\nPersonal Profile\nName                  : Prabhuswamy M S\nDate of Birth         : 12/09/1995\nLanguage Known        : English, Kannada,\nPermanent Address     : No:348/1 Harinivas, Koramangala,560095\n\nDate :                                                        Your Faithfully\nPlace :                                                       Prabhuswamy M S",
+  "gpt_prompt": "Extract the following JSON from the resume text below.\nReturn ONLY a valid JSON object with these exact keys. Do not add any text outside the JSON.\n\n{\n  \"name\": null,\n  \"email\": null,\n  \"phone\": null,\n  \"location\": null,\n  \"skills\": [],\n  \"experience_years\": 0,\n  \"education\": [\n    {\"school\": null, \"degree\": null, \"year\": null}\n  ],\n  \"experience\": [\n    {\n      \"company\": null,\n      \"title\": null,\n      \"start_date\": null,\n      \"end_date\": null,\n      \"duration\": null,\n      \"description\": null\n    }\n  ],\n  \"projects\": [\n    {\n      \"title\": null,\n      \"description\": null,\n      \"technologies\": [],\n      \"duration\": null\n    }\n  ],\n  \"certifications\": [],\n  \"languages\": []\n}\n\nRULES REMINDER:\n- experience[] = PAID EMPLOYMENT ONLY (salary/wage from a real employer).\n- projects[] = everything else: university capstones, personal projects,   hackathons, open-source, internships listed without company, etc.\n- experience_years = always 0 (Python calculates this, not you).\n- If experience[] is empty (no paid employment found), that is correct.\n- Do NOT invent company names. If no employer name exists for a role,   set company to null and move the entry to projects[].\n- start_date and end_date: copy the exact text from the resume   (e.g. 'Jan 2023', '2023-01', 'Present'). null if not written.\n\nResume text:\n      CURRICULUM VITAE\n\n       Prabhuswamy M S\n D             +91 8867792583\n\n        <u>prabhuswamyms1995@gmail.com</u>\n\nObjective:\nSecure a responsible career opportunity to fully utilize my training and skills, while making a\nsignificant contribution to the success of the company.\n\n EDUCATIONALQUALIFICATION\n       Course      Name of Institution               University         Yearof                  Percentage\n                                                                        Passing\n       B.E.        Ghousia College of                V.T.U              2017                    61.01%\n       (EEE)       Engineering, Ramanagaram.         Belagavi\n       P.U.C.      Bharathi College,                 Pre University     2013                    52.33%\n       (PCMB)      Bharathinagara,                   EducationBangalore\n                   Maddhur (T), Mandya\n                   (D)\n       S.S.L.C     Government Highschool,            K.S.E.E.B          2011                    60.16%\n                   Shivanasamudram.\n\nCertification: I had done course on hardware, networking, server and CCNA.at Jetking Rajajinagar\n Experience\n Organization     : Kalpa electrical Pvt Ltd\n Period           : FEB 2021 to July 2023\n Designation      : Testing Engineer and Desktop support engineer\n\nExperience\nOrganization: Ujjivan Small Finance Bank (HO)\nPeriod            : Aug 2023 to Sep2024\nFranchisee        : 3i-infotechConsultancyPvt. Ltd.\nDesignation       : System Administrator\n\nRoles and Responsibility:\n\n  x     Installation Of Windows 10 and windows 11 operating Systemand troubleshooting.\n  x     98% Infra availability, network monitor and Co-ordination with network team.\n  x     Managing NLT,RLT, And VIP user at HO .On top priority.\n  x     Done root cause analysis for repeated issues.\n  x     Board meeting , VC support, at HO.\n  x     Host inventory Management and maintaining inventory details like IP\u2019s, network\n        link details call log reports.\n  x     Quarterly asset declaration reports for HO and FFS clearance and data backup.\n\n\nx     Project rollout like printer, manage engine and other project from business end.\nx     Maintenance, windows patch, basic application upgradation, laptop\n      encryption, identify and removal of prohibited software.\nx     Maintaining Active Directory User and Computer accounts\nx     Experience in LAN/WAN Troubleshooting.\nx     Provided desktop and laptop support for over 2000 users.\nx     Install and configure printer MS Office, Anti-Virus, Other Applications on Desktop\nx     Coordinating with Security team for policy upgradation.\nx     Providing LAN connectivity through IP phones by trunking the switch port\nx     Addressing user tickets related to software, hardware and networking.\nx     Directing unresolved calls to the next level ofsupport\nx     Providing remote support to the next level Engineers during installation\nx     Speak to customers via emails and phone for initial requirement\nx     Monitoring Health, CPU Processor and RAM Utilization Access Switch\u2019s and core\n      switch\u2019s.\nx     Monitor and resolve the IT related issues within SLA based on priority.\nx     Preparing technical documents and manuals.\nx     Configuring Email Clients on Outlook\nx     CISCO Jabber installation and T-Shoot.\n\n\n\n\n\n Experience :\nOrganization : A20 Construction Pvt Ltd\nPeriod          : oct 2024 to Till Date\nFranchisee      : Indian Railway\nDesignation     : Network Engineer\n\nRoles and Responsibility:\n x     Router configuration and Wi- Fi installation.\n x     Network issue checked at user end.\n x     Server maintenance and manage.\n x     VC meeting, Webex meeting and local meeting connected.\n x     CCTV Configuration and maintenance.\n x     UTP cable crimping.\n x     User static Ip maintenance and manage.\n x     User end application not working attended and resolved.\n x     Daily routing all series Wi fi checked and maintenance.\n\n\n      Skill Summary:\nx     Ticketing Tools: Service desk,\nx     Remote support Tools: Manage engine.\nx     Different Layers ofOSI Model and TCP/IP model.\nx     Ethernet protocol base versions\nx     Modes ofcommunication and Casting ofcommunication\nx     IPv4 and IPv6 Classification\nx     Different types ofcomputer networks\nx     Server installation, configuration and managing the roles ofserver\nx     Experience in LAN/WAN Troubleshooting.\n\n\n\nPersonal Profile\nName                  : Prabhuswamy M S\nDate of Birth         : 12/09/1995\nLanguage Known        : English, Kannada,\nPermanent Address     : No:348/1 Harinivas, Koramangala,560095\n\nDate :                                                        Your Faithfully\nPlace :                                                       Prabhuswamy M S",
+  "gpt_raw_response": "{\n  \"name\": \"Prabhuswamy M S\",\n  \"email\": \"prabhuswamyms1995@gmail.com\",\n  \"phone\": \"+91 8867792583\",\n  \"location\": \"No:348/1 Harinivas, Koramangala,560095\",\n  \"skills\": [\n    \"Ticketing Tools: Service desk\",\n    \"Remote support Tools: Manage engine\",\n    \"Different Layers of OSI Model and TCP/IP model\",\n    \"Ethernet protocol base versions\",\n    \"Modes of communication and Casting of communication\",\n    \"IPv4 and IPv6 Classification\",\n    \"Different types of computer networks\",\n    \"Server installation, configuration and managing the roles of server\",\n    \"Experience in LAN/WAN Troubleshooting\"\n  ],\n  \"experience_years\": 0,\n  \"education\": [\n    {\n      \"school\": \"Ghousia College of Engineering, Ramanagaram.\",\n      \"degree\": \"B.E. (EEE)\",\n      \"year\": \"2017\"\n    },\n    {\n      \"school\": \"Bharathi College, Bharathinagara, Maddhur (T), Mandya (D)\",\n      \"degree\": \"P.U.C. (PCMB)\",\n      \"year\": \"2013\"\n    },\n    {\n      \"school\": \"Government Highschool, Shivanasamudram.\",\n      \"degree\": \"S.S.L.C\",\n      \"year\": \"2011\"\n    }\n  ],\n  \"experience\": [\n    {\n      \"company\": \"Kalpa electrical Pvt Ltd\",\n      \"title\": \"Testing Engineer and Desktop support engineer\",\n      \"start_date\": \"FEB 2021\",\n      \"end_date\": \"July 2023\",\n      \"duration\": null,\n      \"description\": null\n    },\n    {\n      \"company\": \"Ujjivan Small Finance Bank (HO)\",\n      \"title\": \"System Administrator\",\n      \"start_date\": \"Aug 2023\",\n      \"end_date\": \"Sep2024\",\n      \"duration\": null,\n      \"description\": null\n    },\n    {\n      \"company\": \"A20 Construction Pvt Ltd\",\n      \"title\": \"Network Engineer\",\n      \"start_date\": \"oct 2024\",\n      \"end_date\": \"Till Date\",\n      \"duration\": null,\n      \"description\": null\n    }\n  ],\n  \"projects\": [],\n  \"certifications\": [\n    \"I had done course on hardware, networking, server and CCNA.at Jetking Rajajinagar\"\n  ],\n  \"languages\": [\n    \"English\",\n    \"Kannada\"\n  ]\n}",
+  "validation_errors": [],
+  "final_structured_json": {
+    "name": "Prabhuswamy M S",
+    "email": "prabhuswamyms1995@gmail.com",
+    "phone": "+91 8867792583",
+    "skills": [
+      "Ticketing Tools: Service desk",
+      "Remote support Tools: Manage engine",
+      "Different Layers of OSI Model and TCP/IP model",
+      "Ethernet protocol base versions",
+      "Modes of communication and Casting of communication",
+      "IPv4 and IPv6 Classification",
+      "Different types of computer networks",
+      "Server installation, configuration and managing the roles of server",
+      "Experience in LAN/WAN Troubleshooting"
+    ],
+    "experience_years": 5.3,
+    "education": [
+      {
+        "school": "Ghousia College of Engineering, Ramanagaram.",
+        "degree": "B.E. (EEE)",
+        "year": "2017"
+      },
+      {
+        "school": "Bharathi College, Bharathinagara, Maddhur (T), Mandya (D)",
+        "degree": "P.U.C. (PCMB)",
+        "year": "2013"
+      },
+      {
+        "school": "Government Highschool, Shivanasamudram.",
+        "degree": "S.S.L.C",
+        "year": "2011"
+      }
+    ],
+    "experience": [
+      {
+        "company": "Kalpa electrical Pvt Ltd",
+        "title": "Testing Engineer and Desktop support engineer",
+        "start_date": "FEB 2021",
+        "end_date": "July 2023",
+        "duration": null,
+        "description": null
+      },
+      {
+        "company": "Ujjivan Small Finance Bank (HO)",
+        "title": "System Administrator",
+        "start_date": "Aug 2023",
+        "end_date": "Sep2024",
+        "duration": null,
+        "description": null
+      },
+      {
+        "company": "A20 Construction Pvt Ltd",
+        "title": "Network Engineer",
+        "start_date": "oct 2024",
+        "end_date": "Till Date",
+        "duration": null,
+        "description": null
+      }
+    ],
+    "projects": [],
+    "location": "No:348/1 Harinivas, Koramangala,560095",
+    "certifications": [
+      "I had done course on hardware, networking, server and CCNA.at Jetking Rajajinagar"
+    ],
+    "languages": [
+      "English",
+      "Kannada"
+    ]
+  },
+  "mismatches_audit": {
+    "experience_years": "Experience years value 5.3 is not explicitly mentioned in the text (likely inferred/calculated)."
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "candidate_id": 137,
+  "timestamp": "2026-07-09T05:05:58.602052",
+  "raw_llama_parse_output": "PERSONAL INFORMATION                                                Sathish Kumar\n                                                                       Sampath\n  Email                                                      Automation Support Engineer\n  s at h is h ku mar2 61996@gmail.co m                            Technical Support\n  Mobile                                  PROFILE SUMMARY\n  (+91) 9788763871\n  Total work experience\n  5 Years 6 Months                        Troubleshooting hardware and software's,OS installation,OST,PST,manageing\n                                          Tickets and support via teams and chat and Remote tools,Fallowup with Existing\n                                          users asset Collection\nKEY SKILLS\n\n                                          EDUCATION\nnexthink\n\nactive directo ry s uppo rt               2018               B.Tech/B.E.\n\nremote support                                               Arunai Engineering College, Thiruvannamalai\n\nwindows system administration             2010               XIIth\n\ndesktop engineering                                          English\n\nos in s t allat io n                      2012               Xth\n\noutlo o k co n f igu rat io n                                English\n\nMac OS\n\nO365 Admin\n                                          WORK EXPERIENCE\nAutomation\n\nMS Patching                               Dec 2022 -         Automation Support Engineer Technical Support\n\nVulnerability Management                  Present            CMS IT Services\n\nCompliance Management                                        With over 5 years of experience in Desktop Support, I specialize\n\nCompliance Monitoring                                        in reviewing and enhancing existing IT systems to align with user\n                                                             needs and business objectives. I bring expertise in delivering\n                                                             top-notch technical support and troubleshooting to optimize\n                                                             system performance. Proficient in diagnosing and resolving\nOTHER PERSONAL DETAILS                                       technical issues, I am skilled in ensuring seamless operation of\n                                                             hardware, software, and networking components. My goal is to\n                                                             leverage my strong analytical abilities and technical acumen to\n                                                             drive efficiency and productivity. Eager to contribute to a\nCity                    Bengaluru                            dynamic team and take on new challenges in the realm of IT\n                                                             support and system improvements.\nCountry                 INDIA\n\n                                          Jan 2022 - Dec     Desktop Support Engineer\n\nLANGUAGES                                 2022               MindSquare Technologies\n                                                             I am responsible for handling users tickets and maintain TAT of\n                                                             24 hours. End user support for all employee's. Procurement\n                                                             process for end user resources. Providing the administration\n English                                                     access like adding and reset and changing passwords for users.\n Tamil                                                       Troubleshoot software and hardware maintenance.\n Telugu                                   Apr 2019 - Nov     Desktop Support Engineer\n                                          2021               ERMS Technologies\n Kannada                                                     Windows administration Outlook configuration and Backup. Pst\n                                                             and. Qst Domain rejoining Inward and procurement of users\n                                                             resources\n\n\nNO_CONTENT_HERE",
+  "gpt_prompt": "Extract the following JSON from the resume text below.\nReturn ONLY a valid JSON object with these exact keys. Do not add any text outside the JSON.\n\n{\n  \"name\": null,\n  \"email\": null,\n  \"phone\": null,\n  \"location\": null,\n  \"skills\": [],\n  \"experience_years\": 0,\n  \"education\": [\n    {\"school\": null, \"degree\": null, \"year\": null}\n  ],\n  \"experience\": [\n    {\n      \"company\": null,\n      \"title\": null,\n      \"start_date\": null,\n      \"end_date\": null,\n      \"duration\": null,\n      \"description\": null\n    }\n  ],\n  \"projects\": [\n    {\n      \"title\": null,\n      \"description\": null,\n      \"technologies\": [],\n      \"duration\": null\n    }\n  ],\n  \"certifications\": [],\n  \"languages\": []\n}\n\nRULES REMINDER:\n- experience[] = PAID EMPLOYMENT ONLY (salary/wage from a real employer).\n- projects[] = everything else: university capstones, personal projects,   hackathons, open-source, internships listed without company, etc.\n- experience_years = always 0 (Python calculates this, not you).\n- If experience[] is empty (no paid employment found), that is correct.\n- Do NOT invent company names. If no employer name exists for a role,   set company to null and move the entry to projects[].\n- start_date and end_date: copy the exact text from the resume   (e.g. 'Jan 2023', '2023-01', 'Present'). null if not written.\n\nResume text:\nPERSONAL INFORMATION                                                Sathish Kumar\n                                                                       Sampath\n  Email                                                      Automation Support Engineer\n  s at h is h ku mar2 61996@gmail.co m                            Technical Support\n  Mobile                                  PROFILE SUMMARY\n  (+91) 9788763871\n  Total work experience\n  5 Years 6 Months                        Troubleshooting hardware and software's,OS installation,OST,PST,manageing\n                                          Tickets and support via teams and chat and Remote tools,Fallowup with Existing\n                                          users asset Collection\nKEY SKILLS\n\n                                          EDUCATION\nnexthink\n\nactive directo ry s uppo rt               2018               B.Tech/B.E.\n\nremote support                                               Arunai Engineering College, Thiruvannamalai\n\nwindows system administration             2010               XIIth\n\ndesktop engineering                                          English\n\nos in s t allat io n                      2012               Xth\n\noutlo o k co n f igu rat io n                                English\n\nMac OS\n\nO365 Admin\n                                          WORK EXPERIENCE\nAutomation\n\nMS Patching                               Dec 2022 -         Automation Support Engineer Technical Support\n\nVulnerability Management                  Present            CMS IT Services\n\nCompliance Management                                        With over 5 years of experience in Desktop Support, I specialize\n\nCompliance Monitoring                                        in reviewing and enhancing existing IT systems to align with user\n                                                             needs and business objectives. I bring expertise in delivering\n                                                             top-notch technical support and troubleshooting to optimize\n                                                             system performance. Proficient in diagnosing and resolving\nOTHER PERSONAL DETAILS                                       technical issues, I am skilled in ensuring seamless operation of\n                                                             hardware, software, and networking components. My goal is to\n                                                             leverage my strong analytical abilities and technical acumen to\n                                                             drive efficiency and productivity. Eager to contribute to a\nCity                    Bengaluru                            dynamic team and take on new challenges in the realm of IT\n                                                             support and system improvements.\nCountry                 INDIA\n\n                                          Jan 2022 - Dec     Desktop Support Engineer\n\nLANGUAGES                                 2022               MindSquare Technologies\n                                                             I am responsible for handling users tickets and maintain TAT of\n                                                             24 hours. End user support for all employee's. Procurement\n                                                             process for end user resources. Providing the administration\n English                                                     access like adding and reset and changing passwords for users.\n Tamil                                                       Troubleshoot software and hardware maintenance.\n Telugu                                   Apr 2019 - Nov     Desktop Support Engineer\n                                          2021               ERMS Technologies\n Kannada                                                     Windows administration Outlook configuration and Backup. Pst\n                                                             and. Qst Domain rejoining Inward and procurement of users\n                                                             resources\n\n\nNO_CONTENT_HERE",
+  "gpt_raw_response": "{\n  \"name\": \"Sathish Kumar Sampath\",\n  \"email\": \"sathishkumar261996@gmail.com\",\n  \"phone\": \"(+91) 9788763871\",\n  \"location\": \"Bengaluru\",\n  \"skills\": [\n    \"nexthink\",\n    \"active directory support\",\n    \"remote support\",\n    \"windows system administration\",\n    \"desktop engineering\",\n    \"os installation\",\n    \"outlook configuration\",\n    \"Mac OS\",\n    \"O365 Admin\",\n    \"MS Patching\",\n    \"Vulnerability Management\",\n    \"Compliance Management\",\n    \"Compliance Monitoring\"\n  ],\n  \"experience_years\": 0,\n  \"education\": [\n    {\"school\": \"Arunai Engineering College, Thiruvannamalai\", \"degree\": \"B.Tech/B.E.\", \"year\": \"2018\"},\n    {\"school\": null, \"degree\": \"XIIth\", \"year\": \"2010\"},\n    {\"school\": null, \"degree\": \"Xth\", \"year\": \"2012\"}\n  ],\n  \"experience\": [\n    {\n      \"company\": \"CMS IT Services\",\n      \"title\": \"Automation Support Engineer Technical Support\",\n      \"start_date\": \"Dec 2022\",\n      \"end_date\": \"Present\",\n      \"duration\": null,\n      \"description\": \"With over 5 years of experience in Desktop Support, I specialize in reviewing and enhancing existing IT systems to align with user needs and business objectives. I bring expertise in delivering top-notch technical support and troubleshooting to optimize system performance. Proficient in diagnosing and resolving technical issues, I am skilled in ensuring seamless operation of hardware, software, and networking components. My goal is to leverage my strong analytical abilities and technical acumen to drive efficiency and productivity. Eager to contribute to a dynamic team and take on new challenges in the realm of IT support and system improvements.\"\n    },\n    {\n      \"company\": \"MindSquare Technologies\",\n      \"title\": \"Desktop Support Engineer\",\n      \"start_date\": \"Jan 2022\",\n      \"end_date\": \"Dec 2022\",\n      \"duration\": null,\n      \"description\": \"I am responsible for handling users tickets and maintain TAT of 24 hours. End user support for all employee's. Procurement process for end user resources. Providing the administration access like adding and reset and changing passwords for users. Troubleshoot software and hardware maintenance.\"\n    },\n    {\n      \"company\": \"ERMS Technologies\",\n      \"title\": \"Desktop Support Engineer\",\n      \"start_date\": \"Apr 2019\",\n      \"end_date\": \"Nov 2021\",\n      \"duration\": null,\n      \"description\": \"Windows administration Outlook configuration and Backup. Pst and. Qst Domain rejoining Inward and procurement of users resources.\"\n    }\n  ],\n  \"projects\": [],\n  \"certifications\": [],\n  \"languages\": [\n    \"English\",\n    \"Tamil\",\n    \"Telugu\",\n    \"Kannada\"\n  ]\n}",
+  "validation_errors": [],
+  "final_structured_json": {
+    "name": "Sathish Kumar Sampath",
+    "email": "sathishkumar261996@gmail.com",
+    "phone": "(+91) 9788763871",
+    "skills": [
+      "nexthink",
+      "active directory support",
+      "remote support",
+      "windows system administration",
+      "desktop engineering",
+      "os installation",
+      "outlook configuration",
+      "Mac OS",
+      "O365 Admin",
+      "MS Patching",
+      "Vulnerability Management",
+      "Compliance Management",
+      "Compliance Monitoring"
+    ],
+    "experience_years": 7.1,
+    "education": [
+      {
+        "school": "Arunai Engineering College, Thiruvannamalai",
+        "degree": "B.Tech/B.E.",
+        "year": "2018"
+      },
+      {
+        "school": null,
+        "degree": "XIIth",
+        "year": "2010"
+      },
+      {
+        "school": null,
+        "degree": "Xth",
+        "year": "2012"
+      }
+    ],
+    "experience": [
+      {
+        "company": "CMS IT Services",
+        "title": "Automation Support Engineer Technical Support",
+        "start_date": "Dec 2022",
+        "end_date": "Present",
+        "duration": null,
+        "description": "With over 5 years of experience in Desktop Support, I specialize in reviewing and enhancing existing IT systems to align with user needs and business objectives. I bring expertise in delivering top-notch technical support and troubleshooting to optimize system performance. Proficient in diagnosing and resolving technical issues, I am skilled in ensuring seamless operation of hardware, software, and networking components. My goal is to leverage my strong analytical abilities and technical acumen to drive efficiency and productivity. Eager to contribute to a dynamic team and take on new challenges in the realm of IT support and system improvements."
+      },
+      {
+        "company": "MindSquare Technologies",
+        "title": "Desktop Support Engineer",
+        "start_date": "Jan 2022",
+        "end_date": "Dec 2022",
+        "duration": null,
+        "description": "I am responsible for handling users tickets and maintain TAT of 24 hours. End user support for all employee's. Procurement process for end user resources. Providing the administration access like adding and reset and changing passwords for users. Troubleshoot software and hardware maintenance."
+      },
+      {
+        "company": "ERMS Technologies",
+        "title": "Desktop Support Engineer",
+        "start_date": "Apr 2019",
+        "end_date": "Nov 2021",
+        "duration": null,
+        "description": "Windows administration Outlook configuration and Backup. Pst and. Qst Domain rejoining Inward and procurement of users resources."
+      }
+    ],
+    "projects": [],
+    "location": "Bengaluru",
+    "certifications": [],
+    "languages": [
+      "English",
+      "Tamil",
+      "Telugu",
+      "Kannada"
+    ]
+  },
+  "mismatches_audit": {
+    "name": "Name 'Sathish Kumar Sampath' not found in raw text.",
+    "email": "Email 'sathishkumar261996@gmail.com' not found in raw text.",
+    "experience_years": "Experience years value 7.1 is not explicitly mentioned in the text (likely inferred/calculated)."
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "candidate_id": 131,
+  "timestamp": "2026-07-09T05:06:20.082108",
+  "raw_llama_parse_output": "Vinaya Venkatesh Mesta\nCell: +91-9380670164\nEmail: vinayamesta29@gmail.com\n\nProfessional Summary\n\nI have around 5 years of experience as a Technical Support Engineer, and I like working in a\nstrong and competitive environment. During my journey, I have gathered knowledge about\nCitrix Virtual Apps and Desktops and Citrix Cloud.\n\nCarrier Objective\n\nObtain a competitive position in a very reputable company, where I can use all my knowledge I have\ngathered about Virtualization. Seeking a position as a Technical Support Engineer where my ability and\ndedication can be utilized.\n\nTechnical Skills\n                            CCA-N(Citrix Certified Associate - Networking)\n Certification              Certification from Citrix, focusing on Citrix ADC and Citrix Gateway\n\n Virtualization             Citrix Virtual Apps and Desktop and Citrix Cloud.\n\n Networking                  DLP, OSI layers, TCP/IP, IP, TCP, UDP, ACL, DHCP, DHCP-relay, DNS,\n                             ARP, Proxy-ARP, VLAN, Inter-vlan routing, RIP, EIGRP, STP, RSTP, MSTP,\n                             HTTP, HTTPS, SMTP, VRRP, HSRP, NAT, PAT, Port-forwarding, Port\n                             security, VTP, Static routing, Dynamic Routing\n                             Linux VDA\n\n Security                    VPN, IPSEC VPN, SSL VPN.\n\nOperating System             Windows 8, Windows 10, Windows 2012 server\n\n Tools                       CDF Control, CDF Monitor, ProcMon, ProcDump, Wireshark, Cisco packet\n                             Tracer, Splunk, Obelisk and Gns3\n\n\nProfessional Experience\n\nHCL Technologies (For Citrix Client)                                   Apr 2024 - Present\nTechnical Support Engineer\n -        Working as an Associate Technical Support Engineer, in Frontline support to complex technical\n          issues in Citrix environment.\n -        Strong Knowledge of Microsoft RDP, Microsoft Active Directory, Machine Creation Services, Citrix\n          Store-front, Citrix VDA, Citrix Delivery Controller (Studio), Citrix Workspace app, Director and\n          networking skills.\n -        Good Experience of Citrix policy printer management through Citrix, Citrix profile management and\n          group policy management and configuration.\n -        Extensive experience in the virtualization of Citrix based infrastructure and has a strong\n          understanding of capacity management.\n -        Extensive troubleshooting and problem-solving skills.\n\nCitrix                                                                 May 2022 - Apr 2024\nAssociate Technical Support Engineer\n -        Provided frontline support for complex technical issues in Citrix environments, including Citrix\n          Virtual Apps and Desktops.\n -        Collaborated with cross-functional teams to troubleshoot Citrix Storefront, VDA, Delivery Controller\n          (Studio), Workspace App, and Director.\n -        Managed Citrix policies, profile management, and group policy configurations to streamline user\n          experience.\n -        Ensured system stability through active capacity planning and virtualization best practices.\n\nStartek                                                                Nov 2020 - Apr 2022\nCustomer Support Executive\n -        As an engineer, working with highly qualified professionals, communicating information to\n          customers and associates at the frontline within the organization through effective communication\n          and presentation skills.\n -        Worked in a B2B team, handled Business-to-Business customers.\n\n\nEducation Qualification\n\nGraduation: Canara Engineering College, Mangalore. B.E. (Electronics and Communication) 6.1 (CGPA) [2020]\n\nPUC: Bhanghurnagar Junior College, Dandeli. PUC 59.5% [2015]\n\nMatriculation: Janata Vidhyalaya High School, Dandeli. SSLC 80.16% [2013]\n\n\nPersonal Information\n\nDate of Birth                 : 8 July 1997\nFather\u2019s Name                 : Mesta Venkatesh Bhima\nMother\u2019s Name                 : Mesta Vidya Venkatesh\nAddress                       : Sudarshan Nagar, Dandeli-581325\n\nHobbies                       : Reading Books, Browsing Internet, Dancing, Signing.\n\nNationality                   : India\nLanguages Known Malayalam     : English, Konkani, Kannada, Hindi, Marathi, Tamil, Telugu,\n\nAny kind of disability        : No\nWillingness to Relocate       : Yes\n\n\n\n\n\n\n\n\n\n\n<u>DECLARATION</u>\n\n\n\nI do hereby solemnly declare that all the information furnished above is true to the best of\nmy knowledge and belief.\n\n\n\n\n\n\n\nYours truthfully,\n(Vinaya Venkatesh Mesta)",
+  "gpt_prompt": "Extract the following JSON from the resume text below.\nReturn ONLY a valid JSON object with these exact keys. Do not add any text outside the JSON.\n\n{\n  \"name\": null,\n  \"email\": null,\n  \"phone\": null,\n  \"location\": null,\n  \"skills\": [],\n  \"experience_years\": 0,\n  \"education\": [\n    {\"school\": null, \"degree\": null, \"year\": null}\n  ],\n  \"experience\": [\n    {\n      \"company\": null,\n      \"title\": null,\n      \"start_date\": null,\n      \"end_date\": null,\n      \"duration\": null,\n      \"description\": null\n    }\n  ],\n  \"projects\": [\n    {\n      \"title\": null,\n      \"description\": null,\n      \"technologies\": [],\n      \"duration\": null\n    }\n  ],\n  \"certifications\": [],\n  \"languages\": []\n}\n\nRULES REMINDER:\n- experience[] = PAID EMPLOYMENT ONLY (salary/wage from a real employer).\n- projects[] = everything else: university capstones, personal projects,   hackathons, open-source, internships listed without company, etc.\n- experience_years = always 0 (Python calculates this, not you).\n- If experience[] is empty (no paid employment found), that is correct.\n- Do NOT invent company names. If no employer name exists for a role,   set company to null and move the entry to projects[].\n- start_date and end_date: copy the exact text from the resume   (e.g. 'Jan 2023', '2023-01', 'Present'). null if not written.\n\nResume text:\nVinaya Venkatesh Mesta\nCell: +91-9380670164\nEmail: vinayamesta29@gmail.com\n\nProfessional Summary\n\nI have around 5 years of experience as a Technical Support Engineer, and I like working in a\nstrong and competitive environment. During my journey, I have gathered knowledge about\nCitrix Virtual Apps and Desktops and Citrix Cloud.\n\nCarrier Objective\n\nObtain a competitive position in a very reputable company, where I can use all my knowledge I have\ngathered about Virtualization. Seeking a position as a Technical Support Engineer where my ability and\ndedication can be utilized.\n\nTechnical Skills\n                            CCA-N(Citrix Certified Associate - Networking)\n Certification              Certification from Citrix, focusing on Citrix ADC and Citrix Gateway\n\n Virtualization             Citrix Virtual Apps and Desktop and Citrix Cloud.\n\n Networking                  DLP, OSI layers, TCP/IP, IP, TCP, UDP, ACL, DHCP, DHCP-relay, DNS,\n                             ARP, Proxy-ARP, VLAN, Inter-vlan routing, RIP, EIGRP, STP, RSTP, MSTP,\n                             HTTP, HTTPS, SMTP, VRRP, HSRP, NAT, PAT, Port-forwarding, Port\n                             security, VTP, Static routing, Dynamic Routing\n                             Linux VDA\n\n Security                    VPN, IPSEC VPN, SSL VPN.\n\nOperating System             Windows 8, Windows 10, Windows 2012 server\n\n Tools                       CDF Control, CDF Monitor, ProcMon, ProcDump, Wireshark, Cisco packet\n                             Tracer, Splunk, Obelisk and Gns3\n\n\nProfessional Experience\n\nHCL Technologies (For Citrix Client)                                   Apr 2024 - Present\nTechnical Support Engineer\n -        Working as an Associate Technical Support Engineer, in Frontline support to complex technical\n          issues in Citrix environment.\n -        Strong Knowledge of Microsoft RDP, Microsoft Active Directory, Machine Creation Services, Citrix\n          Store-front, Citrix VDA, Citrix Delivery Controller (Studio), Citrix Workspace app, Director and\n          networking skills.\n -        Good Experience of Citrix policy printer management through Citrix, Citrix profile management and\n          group policy management and configuration.\n -        Extensive experience in the virtualization of Citrix based infrastructure and has a strong\n          understanding of capacity management.\n -        Extensive troubleshooting and problem-solving skills.\n\nCitrix                                                                 May 2022 - Apr 2024\nAssociate Technical Support Engineer\n -        Provided frontline support for complex technical issues in Citrix environments, including Citrix\n          Virtual Apps and Desktops.\n -        Collaborated with cross-functional teams to troubleshoot Citrix Storefront, VDA, Delivery Controller\n          (Studio), Workspace App, and Director.\n -        Managed Citrix policies, profile management, and group policy configurations to streamline user\n          experience.\n -        Ensured system stability through active capacity planning and virtualization best practices.\n\nStartek                                                                Nov 2020 - Apr 2022\nCustomer Support Executive\n -        As an engineer, working with highly qualified professionals, communicating information to\n          customers and associates at the frontline within the organization through effective communication\n          and presentation skills.\n -        Worked in a B2B team, handled Business-to-Business customers.\n\n\nEducation Qualification\n\nGraduation: Canara Engineering College, Mangalore. B.E. (Electronics and Communication) 6.1 (CGPA) [2020]\n\nPUC: Bhanghurnagar Junior College, Dandeli. PUC 59.5% [2015]\n\nMatriculation: Janata Vidhyalaya High School, Dandeli. SSLC 80.16% [2013]\n\n\nPersonal Information\n\nDate of Birth                 : 8 July 1997\nFather\u2019s Name                 : Mesta Venkatesh Bhima\nMother\u2019s Name                 : Mesta Vidya Venkatesh\nAddress                       : Sudarshan Nagar, Dandeli-581325\n\nHobbies                       : Reading Books, Browsing Internet, Dancing, Signing.\n\nNationality                   : India\nLanguages Known Malayalam     : English, Konkani, Kannada, Hindi, Marathi, Tamil, Telugu,\n\nAny kind of disability        : No\nWillingness to Relocate       : Yes\n\n\n\n\n\n\n\n\n\n\n<u>DECLARATION</u>\n\n\n\nI do hereby solemnly declare that all the information furnished above is true to the best of\nmy knowledge and belief.\n\n\n\n\n\n\n\nYours truthfully,\n(Vinaya Venkatesh Mesta)",
+  "gpt_raw_response": "{\n  \"name\": \"Vinaya Venkatesh Mesta\",\n  \"email\": \"vinayamesta29@gmail.com\",\n  \"phone\": \"+91-9380670164\",\n  \"location\": \"Sudarshan Nagar, Dandeli-581325\",\n  \"skills\": [\n    \"CCA-N(Citrix Certified Associate - Networking)\",\n    \"Citrix Virtual Apps and Desktop\",\n    \"Citrix Cloud\",\n    \"DLP\",\n    \"OSI layers\",\n    \"TCP/IP\",\n    \"IP\",\n    \"TCP\",\n    \"UDP\",\n    \"ACL\",\n    \"DHCP\",\n    \"DHCP-relay\",\n    \"DNS\",\n    \"ARP\",\n    \"Proxy-ARP\",\n    \"VLAN\",\n    \"Inter-vlan routing\",\n    \"RIP\",\n    \"EIGRP\",\n    \"STP\",\n    \"RSTP\",\n    \"MSTP\",\n    \"HTTP\",\n    \"HTTPS\",\n    \"SMTP\",\n    \"VRRP\",\n    \"HSRP\",\n    \"NAT\",\n    \"PAT\",\n    \"Port-forwarding\",\n    \"Port security\",\n    \"VTP\",\n    \"Static routing\",\n    \"Dynamic Routing\",\n    \"Linux VDA\",\n    \"VPN\",\n    \"IPSEC VPN\",\n    \"SSL VPN\",\n    \"Windows 8\",\n    \"Windows 10\",\n    \"Windows 2012 server\",\n    \"CDF Control\",\n    \"CDF Monitor\",\n    \"ProcMon\",\n    \"ProcDump\",\n    \"Wireshark\",\n    \"Cisco packet Tracer\",\n    \"Splunk\",\n    \"Obelisk\",\n    \"Gns3\"\n  ],\n  \"experience_years\": 0,\n  \"education\": [\n    {\n      \"school\": \"Canara Engineering College, Mangalore\",\n      \"degree\": \"B.E. (Electronics and Communication)\",\n      \"year\": \"2020\"\n    },\n    {\n      \"school\": \"Bhanghurnagar Junior College, Dandeli\",\n      \"degree\": \"PUC\",\n      \"year\": \"2015\"\n    },\n    {\n      \"school\": \"Janata Vidhyalaya High School, Dandeli\",\n      \"degree\": \"SSLC\",\n      \"year\": \"2013\"\n    }\n  ],\n  \"experience\": [\n    {\n      \"company\": \"HCL Technologies (For Citrix Client)\",\n      \"title\": \"Technical Support Engineer\",\n      \"start_date\": \"Apr 2024\",\n      \"end_date\": \"Present\",\n      \"duration\": null,\n      \"description\": \"-        Working as an Associate Technical Support Engineer, in Frontline support to complex technical issues in Citrix environment.\\n -        Strong Knowledge of Microsoft RDP, Microsoft Active Directory, Machine Creation Services, Citrix Store-front, Citrix VDA, Citrix Delivery Controller (Studio), Citrix Workspace app, Director and networking skills.\\n -        Good Experience of Citrix policy printer management through Citrix, Citrix profile management and group policy management and configuration.\\n -        Extensive experience in the virtualization of Citrix based infrastructure and has a strong understanding of capacity management.\\n -        Extensive troubleshooting and problem-solving skills.\"\n    },\n    {\n      \"company\": \"Citrix\",\n      \"title\": \"Associate Technical Support Engineer\",\n      \"start_date\": \"May 2022\",\n      \"end_date\": \"Apr 2024\",\n      \"duration\": null,\n      \"description\": \"-        Provided frontline support for complex technical issues in Citrix environments, including Citrix Virtual Apps and Desktops.\\n -        Collaborated with cross-functional teams to troubleshoot Citrix Storefront, VDA, Delivery Controller (Studio), Workspace App, and Director.\\n -        Managed Citrix policies, profile management, and group policy configurations to streamline user experience.\\n -        Ensured system stability through active capacity planning and virtualization best practices.\"\n    },\n    {\n      \"company\": \"Startek\",\n      \"title\": \"Customer Support Executive\",\n      \"start_date\": \"Nov 2020\",\n      \"end_date\": \"Apr 2022\",\n      \"duration\": null,\n      \"description\": \"-        As an engineer, working with highly qualified professionals, communicating information to customers and associates at the frontline within the organization through effective communication and presentation skills.\\n -        Worked in a B2B team, handled Business-to-Business customers.\"\n    }\n  ],\n  \"projects\": [],\n  \"certifications\": [\n    \"Certification from Citrix, focusing on Citrix ADC and Citrix Gateway\"\n  ],\n  \"languages\": [\n    \"English\",\n    \"Konkani\",\n    \"Kannada\",\n    \"Hindi\",\n    \"Marathi\",\n    \"Tamil\",\n    \"Telugu\"\n  ]\n}",
+  "validation_errors": [],
+  "final_structured_json": {
+    "name": "Vinaya Venkatesh Mesta",
+    "email": "vinayamesta29@gmail.com",
+    "phone": "+91-9380670164",
+    "skills": [
+      "CCA-N(Citrix Certified Associate - Networking)",
+      "Citrix Virtual Apps and Desktop",
+      "Citrix Cloud",
+      "DLP",
+      "OSI layers",
+      "TCP/IP",
+      "IP",
+      "TCP",
+      "UDP",
+      "ACL",
+      "DHCP",
+      "DHCP-relay",
+      "DNS",
+      "ARP",
+      "Proxy-ARP",
+      "VLAN",
+      "Inter-vlan routing",
+      "RIP",
+      "EIGRP",
+      "STP",
+      "RSTP",
+      "MSTP",
+      "HTTP",
+      "HTTPS",
+      "SMTP",
+      "VRRP",
+      "HSRP",
+      "NAT",
+      "PAT",
+      "Port-forwarding",
+      "Port security",
+      "VTP",
+      "Static routing",
+      "Dynamic Routing",
+      "Linux VDA",
+      "VPN",
+      "IPSEC VPN",
+      "SSL VPN",
+      "Windows 8",
+      "Windows 10",
+      "Windows 2012 server",
+      "CDF Control",
+      "CDF Monitor",
+      "ProcMon",
+      "ProcDump",
+      "Wireshark",
+      "Cisco packet Tracer",
+      "Splunk",
+      "Obelisk",
+      "Gns3"
+    ],
+    "experience_years": 5.6,
+    "education": [
+      {
+        "school": "Canara Engineering College, Mangalore",
+        "degree": "B.E. (Electronics and Communication)",
+        "year": "2020"
+      },
+      {
+        "school": "Bhanghurnagar Junior College, Dandeli",
+        "degree": "PUC",
+        "year": "2015"
+      },
+      {
+        "school": "Janata Vidhyalaya High School, Dandeli",
+        "degree": "SSLC",
+        "year": "2013"
+      }
+    ],
+    "experience": [
+      {
+        "company": "HCL Technologies (For Citrix Client)",
+        "title": "Technical Support Engineer",
+        "start_date": "Apr 2024",
+        "end_date": "Present",
+        "duration": null,
+        "description": "-        Working as an Associate Technical Support Engineer, in Frontline support to complex technical issues in Citrix environment.\n -        Strong Knowledge of Microsoft RDP, Microsoft Active Directory, Machine Creation Services, Citrix Store-front, Citrix VDA, Citrix Delivery Controller (Studio), Citrix Workspace app, Director and networking skills.\n -        Good Experience of Citrix policy printer management through Citrix, Citrix profile management and group policy management and configuration.\n -        Extensive experience in the virtualization of Citrix based infrastructure and has a strong understanding of capacity management.\n -        Extensive troubleshooting and problem-solving skills."
+      },
+      {
+        "company": "Citrix",
+        "title": "Associate Technical Support Engineer",
+        "start_date": "May 2022",
+        "end_date": "Apr 2024",
+        "duration": null,
+        "description": "-        Provided frontline support for complex technical issues in Citrix environments, including Citrix Virtual Apps and Desktops.\n -        Collaborated with cross-functional teams to troubleshoot Citrix Storefront, VDA, Delivery Controller (Studio), Workspace App, and Director.\n -        Managed Citrix policies, profile management, and group policy configurations to streamline user experience.\n -        Ensured system stability through active capacity planning and virtualization best practices."
+      },
+      {
+        "company": "Startek",
+        "title": "Customer Support Executive",
+        "start_date": "Nov 2020",
+        "end_date": "Apr 2022",
+        "duration": null,
+        "description": "-        As an engineer, working with highly qualified professionals, communicating information to customers and associates at the frontline within the organization through effective communication and presentation skills.\n -        Worked in a B2B team, handled Business-to-Business customers."
+      }
+    ],
+    "projects": [],
+    "location": "Sudarshan Nagar, Dandeli-581325",
+    "certifications": [
+      "Certification from Citrix, focusing on Citrix ADC and Citrix Gateway"
+    ],
+    "languages": [
+      "English",
+      "Konkani",
+      "Kannada",
+      "Hindi",
+      "Marathi",
+      "Tamil",
+      "Telugu"
+    ]
+  },
+  "mismatches_audit": {}
+}

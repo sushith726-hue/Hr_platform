@@ -1,0 +1,11 @@
+Jane Smith
+Email: jane.smith@example.com
+Phone: +1-555-0244
+Experience:
+Lead AI Engineer at FutureTech (2022 - Present)
+- Developed and deployed deep learning models for NLP tasks using PyTorch and Transformers.
+- Designed prompt engineering strategies for large language models.
+AI Research Scientist at Innovations Lab (2019 - 2022)
+- Researched conversational agent architectures.
+Skills: Python, PyTorch, LLMs, NLP, Prompt Engineering, LangChain, git.
+Education: M.S. in Artificial Intelligence.

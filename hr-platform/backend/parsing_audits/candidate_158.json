@@ -1,0 +1,50 @@
+{
+  "candidate_id": 158,
+  "timestamp": "2026-07-09T05:05:56.424731",
+  "raw_llama_parse_output": "                                                            Suresh R\n                                                      I T Support Engineer\n\n                                 PROFILE SUMMARY\n\n                                 5+ year experience in IT support and I am Proactive IT Support professional skilled\n                                 in troubleshooting, system maintenance, and delivering seamless technical solutions\n                                 to enhance user productivity.\n\n                                 EDUCATION\n\n PERSONAL INFORMATION            2017          B.B.A/ B.M.S\n                                               Voorhees College,\n                                               Vellore\n  Email\n  ravis ures h 2 8@gmail.co m\n  Mobile\n  (+91) 9003519129               WORK EXPERIENCE\n  Total work experience\n  8 Years 0 Month                Dec 2022 -           I T Support Engineer\n                                 Present              ITC Infotech\n\n KEY SKILLS                                           Provide technical assistance, troubleshoot issues, and ensure\n                                                      smooth operation of computer systems and networks.\n\n Software Troubleshooting\n\n Windows System Administration\n\n Microsoft Office Applicatio ns\n\n Active Directo ry\n\n IT In f ras t ru ct u re Support\n\n\n OTHER PERSONAL DETAILS\n\n\n City        Bengaluru\n Country     INDIA\n\n\nLANGUAGES\n\n\n Telugu\n Tamil\n English",
+  "gpt_prompt": "Extract the following JSON from the resume text below.\nReturn ONLY a valid JSON object with these exact keys. Do not add any text outside the JSON.\n\n{\n  \"name\": null,\n  \"email\": null,\n  \"phone\": null,\n  \"location\": null,\n  \"skills\": [],\n  \"experience_years\": 0,\n  \"education\": [\n    {\"school\": null, \"degree\": null, \"year\": null}\n  ],\n  \"experience\": [\n    {\n      \"company\": null,\n      \"title\": null,\n      \"start_date\": null,\n      \"end_date\": null,\n      \"duration\": null,\n      \"description\": null\n    }\n  ],\n  \"projects\": [\n    {\n      \"title\": null,\n      \"description\": null,\n      \"technologies\": [],\n      \"duration\": null\n    }\n  ],\n  \"certifications\": [],\n  \"languages\": []\n}\n\nRULES REMINDER:\n- experience[] = PAID EMPLOYMENT ONLY (salary/wage from a real employer).\n- projects[] = everything else: university capstones, personal projects,   hackathons, open-source, internships listed without company, etc.\n- experience_years = always 0 (Python calculates this, not you).\n- If experience[] is empty (no paid employment found), that is correct.\n- Do NOT invent company names. If no employer name exists for a role,   set company to null and move the entry to projects[].\n- start_date and end_date: copy the exact text from the resume   (e.g. 'Jan 2023', '2023-01', 'Present'). null if not written.\n\nResume text:\n                                                            Suresh R\n                                                      I T Support Engineer\n\n                                 PROFILE SUMMARY\n\n                                 5+ year experience in IT support and I am Proactive IT Support professional skilled\n                                 in troubleshooting, system maintenance, and delivering seamless technical solutions\n                                 to enhance user productivity.\n\n                                 EDUCATION\n\n PERSONAL INFORMATION            2017          B.B.A/ B.M.S\n                                               Voorhees College,\n                                               Vellore\n  Email\n  ravis ures h 2 8@gmail.co m\n  Mobile\n  (+91) 9003519129               WORK EXPERIENCE\n  Total work experience\n  8 Years 0 Month                Dec 2022 -           I T Support Engineer\n                                 Present              ITC Infotech\n\n KEY SKILLS                                           Provide technical assistance, troubleshoot issues, and ensure\n                                                      smooth operation of computer systems and networks.\n\n Software Troubleshooting\n\n Windows System Administration\n\n Microsoft Office Applicatio ns\n\n Active Directo ry\n\n IT In f ras t ru ct u re Support\n\n\n OTHER PERSONAL DETAILS\n\n\n City        Bengaluru\n Country     INDIA\n\n\nLANGUAGES\n\n\n Telugu\n Tamil\n English",
+  "gpt_raw_response": "{\n  \"name\": \"Suresh R\",\n  \"email\": \"ravisuresh28@gmail.com\",\n  \"phone\": \"(+91) 9003519129\",\n  \"location\": \"Bengaluru, INDIA\",\n  \"skills\": [\n    \"Software Troubleshooting\",\n    \"Windows System Administration\",\n    \"Microsoft Office Applications\",\n    \"Active Directory\",\n    \"IT Infrastructure Support\"\n  ],\n  \"experience_years\": 0,\n  \"education\": [\n    {\n      \"school\": \"Voorhees College\",\n      \"degree\": \"B.B.A/ B.M.S\",\n      \"year\": \"2017\"\n    }\n  ],\n  \"experience\": [\n    {\n      \"company\": \"ITC Infotech\",\n      \"title\": \"I T Support Engineer\",\n      \"start_date\": \"Dec 2022\",\n      \"end_date\": \"Present\",\n      \"duration\": null,\n      \"description\": \"Provide technical assistance, troubleshoot issues, and ensure smooth operation of computer systems and networks.\"\n    }\n  ],\n  \"projects\": [],\n  \"certifications\": [],\n  \"languages\": [\n    \"Telugu\",\n    \"Tamil\",\n    \"English\"\n  ]\n}",
+  "validation_errors": [],
+  "final_structured_json": {
+    "name": "Suresh R",
+    "email": "ravisuresh28@gmail.com",
+    "phone": "(+91) 9003519129",
+    "skills": [
+      "Software Troubleshooting",
+      "Windows System Administration",
+      "Microsoft Office Applications",
+      "Active Directory",
+      "IT Infrastructure Support"
+    ],
+    "experience_years": 3.6,
+    "education": [
+      {
+        "school": "Voorhees College",
+        "degree": "B.B.A/ B.M.S",
+        "year": "2017"
+      }
+    ],
+    "experience": [
+      {
+        "company": "ITC Infotech",
+        "title": "I T Support Engineer",
+        "start_date": "Dec 2022",
+        "end_date": "Present",
+        "duration": null,
+        "description": "Provide technical assistance, troubleshoot issues, and ensure smooth operation of computer systems and networks."
+      }
+    ],
+    "projects": [],
+    "location": "Bengaluru, INDIA",
+    "certifications": [],
+    "languages": [
+      "Telugu",
+      "Tamil",
+      "English"
+    ]
+  },
+  "mismatches_audit": {
+    "email": "Email 'ravisuresh28@gmail.com' not found in raw text.",
+    "experience_years": "Experience years value 3.6 is not explicitly mentioned in the text (likely inferred/calculated)."
+  }
+}

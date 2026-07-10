@@ -1,0 +1,100 @@
+{
+  "candidate_id": 60,
+  "timestamp": "2026-07-07T12:33:38.183587",
+  "raw_llama_parse_output": "SUSHITH.M\n\nAI Systems Builder | GenAI, RAG, Agentic Workflows | AI Stack\n& Automation Enthusiast\n\n                       Bangalore | 8088588614\n|sushith726@gmail.com| <u>GitHub</u> | <u>LinkedIn</u>\n\n\n\nSUMMARY\n\nGenerative AI and Machine Learning Engineer with hands-on experience in Retrieval-Augmented Generation (RAG),\nmulti-agent systems, LangGraph, CrewAI, and agentic workflows. Skilled in building autonomous AI systems involving\nplanning, tool use, memory management, long-horizon task decomposition, and multi-modal reasoning using text and\nvision models. Strong foundation in Python, LLM orchestration, vector databases, and modular AI system design.\n\nTECHNICAL SKILLS AND STRENGTHS\n\n AI ,LLM & ML Systems:\n\nRAG, Agentic Workflows, Prompt Engineering, Context Management, Agentic AI , Hallucination Reduction, Supervised\nLearning, Classification, Clustering, Basic Forecasting Concepts\n\n Multi-Agent Systems:- Planner Agents, Task Decomposition, Coordinator Agents ,Tool Calling, Multi-Agent\n Orchestration\n AI Tooling & Platforms:\n\nOpenAI API, LangChain, Langraph, Pinecone, n8n, Airtable, Notion\n\n Backend & APIs:\n\nPython, FastAPI, REST APIs, JSON Structuring\n\n Automation & Workflows:\n\nn8n, API Integrations, Event-driven workflows\n\n Data & Analytics:\n\nSemantic Search, Embeddings, Data Structuring, Basic Metrics Tracking\n\n Systems Thinking:\n\nWorkflow Design, Allocation Logic, Scalable Pipelines\n\n\n\nPROJECTS\n\nProduct Feedback Intelligence & Roadmap Prioritization Engine (Capstone Project)\n\n\u2022 Designed and deployed an AI system to convert unstructured customer feedback into actionable product insights\n\n\u2022 Built multi-step LLM workflows for classification, clustering, and prioritization of feedback themes\n\n\u2022 Integrated RAG pipeline using Pinecone to enable contextual analysis across large feedback datasets\n\n\u2022 Automated end-to-end workflow (ingestion -processing -Jira ticket creation) using n8n\n\n\n\u2022 Improved decision-making speed by structuring insights into prioritized outputs for product teams\n\n\u2022 Ensured reliability through deduplication, structured JSON outputs, and controlled execution\n\n\u2022 Evaluated system outputs across multiple runs to improve accuracy and consistency of AI responses\n\n\u2022 Iterated on prompts and workflow logic based on observed performance patterns\n\n\u2022 Documented workflow steps, input-output structures, and system behavior for reuse and scalability\n\nTech: Python, OpenAI API, LangChain, Pinecone, n8n, FastAPI, Airtable, Jira.\n\n\n\nWhatsApp-Based Hyperlocal Services Platform (Ongoing Project)\n\n\u2022 Designed backend system with intelligent allocation logic based on scoring (distance, rating, availability)\n\n\u2022 Built API-driven workflows to simulate real-time service assignment and tracking\n\n\u2022 Structured system for future AI-based optimization and automation of decision logic\n\n\n\nAI-Powered Customer Query Automation System\n\n\u2022 Built AI-powered query resolution system using RAG for contextual responses\n\n\u2022 Automated query handling workflows using n8n to reduce manual intervention\n\n\u2022 Structured outputs for downstream processing and reliability\n\n\u2022 Designed system to improve response consistency and reduce operational load\n\n\n\n\n\n<u>EDUCATION</u>\n\nB.E. in Electronics and Communication Engineering\n\n MVJ College of Engineering, Bangalore\n\n 2025\n\nPre-University Course (Science)\n\n Sri Vidyanikethan PU College, Gangavathi\n\n 2020\n\nSecondary School (CBSE)\n\n Sri Chaitanya Techno School, Sindhanur\n\n 2018\n\n\nAI SYSTEM OPERATIONS & EXPERIMENTATION\n\n\n\u2022 Experimented with LLM tools (ChatGPT, OpenAI APIs) across multiple use cases to evaluate performance and reliability\n\n\u2022 Designed reusable prompt patterns for tasks like classification, summarization, and structured output generation\n\n\u2022 Explored different workflow designs to improve consistency and reduce failure cases in AI systems\n\n\u2022 Created structured approaches for interacting with AI systems to ensure predictable and scalable usage\n\n\n\n\n\nDECLARATION\n\n\n\nI hereby declare that the above information is true and correct to the best of my knowledge and belief.\n\nPlace: Bangalore\n\n                                                                                                       Sushith M",
+  "gpt_prompt": "Extract the following JSON from the resume text below.\nReturn ONLY a valid JSON object with these exact keys. Do not add any text outside the JSON.\n\n{\n  \"name\": null,\n  \"email\": null,\n  \"phone\": null,\n  \"location\": null,\n  \"skills\": [],\n  \"experience_years\": 0,\n  \"education\": [\n    {\"school\": null, \"degree\": null, \"year\": null}\n  ],\n  \"experience\": [\n    {\n      \"company\": null,\n      \"title\": null,\n      \"start_date\": null,\n      \"end_date\": null,\n      \"duration\": null,\n      \"description\": null\n    }\n  ],\n  \"projects\": [\n    {\n      \"title\": null,\n      \"description\": null,\n      \"technologies\": [],\n      \"duration\": null\n    }\n  ],\n  \"certifications\": [],\n  \"languages\": []\n}\n\nRULES REMINDER:\n- experience[] = PAID EMPLOYMENT ONLY (salary/wage from a real employer).\n- projects[] = everything else: university capstones, personal projects,   hackathons, open-source, internships listed without company, etc.\n- experience_years = always 0 (Python calculates this, not you).\n- If experience[] is empty (no paid employment found), that is correct.\n- Do NOT invent company names. If no employer name exists for a role,   set company to null and move the entry to projects[].\n- start_date and end_date: copy the exact text from the resume   (e.g. 'Jan 2023', '2023-01', 'Present'). null if not written.\n\nResume text:\nSUSHITH.M\n\nAI Systems Builder | GenAI, RAG, Agentic Workflows | AI Stack\n& Automation Enthusiast\n\n                       Bangalore | 8088588614\n|sushith726@gmail.com| <u>GitHub</u> | <u>LinkedIn</u>\n\n\n\nSUMMARY\n\nGenerative AI and Machine Learning Engineer with hands-on experience in Retrieval-Augmented Generation (RAG),\nmulti-agent systems, LangGraph, CrewAI, and agentic workflows. Skilled in building autonomous AI systems involving\nplanning, tool use, memory management, long-horizon task decomposition, and multi-modal reasoning using text and\nvision models. Strong foundation in Python, LLM orchestration, vector databases, and modular AI system design.\n\nTECHNICAL SKILLS AND STRENGTHS\n\n AI ,LLM & ML Systems:\n\nRAG, Agentic Workflows, Prompt Engineering, Context Management, Agentic AI , Hallucination Reduction, Supervised\nLearning, Classification, Clustering, Basic Forecasting Concepts\n\n Multi-Agent Systems:- Planner Agents, Task Decomposition, Coordinator Agents ,Tool Calling, Multi-Agent\n Orchestration\n AI Tooling & Platforms:\n\nOpenAI API, LangChain, Langraph, Pinecone, n8n, Airtable, Notion\n\n Backend & APIs:\n\nPython, FastAPI, REST APIs, JSON Structuring\n\n Automation & Workflows:\n\nn8n, API Integrations, Event-driven workflows\n\n Data & Analytics:\n\nSemantic Search, Embeddings, Data Structuring, Basic Metrics Tracking\n\n Systems Thinking:\n\nWorkflow Design, Allocation Logic, Scalable Pipelines\n\n\n\nPROJECTS\n\nProduct Feedback Intelligence & Roadmap Prioritization Engine (Capstone Project)\n\n\u2022 Designed and deployed an AI system to convert unstructured customer feedback into actionable product insights\n\n\u2022 Built multi-step LLM workflows for classification, clustering, and prioritization of feedback themes\n\n\u2022 Integrated RAG pipeline using Pinecone to enable contextual analysis across large feedback datasets\n\n\u2022 Automated end-to-end workflow (ingestion -processing -Jira ticket creation) using n8n\n\n\n\u2022 Improved decision-making speed by structuring insights into prioritized outputs for product teams\n\n\u2022 Ensured reliability through deduplication, structured JSON outputs, and controlled execution\n\n\u2022 Evaluated system outputs across multiple runs to improve accuracy and consistency of AI responses\n\n\u2022 Iterated on prompts and workflow logic based on observed performance patterns\n\n\u2022 Documented workflow steps, input-output structures, and system behavior for reuse and scalability\n\nTech: Python, OpenAI API, LangChain, Pinecone, n8n, FastAPI, Airtable, Jira.\n\n\n\nWhatsApp-Based Hyperlocal Services Platform (Ongoing Project)\n\n\u2022 Designed backend system with intelligent allocation logic based on scoring (distance, rating, availability)\n\n\u2022 Built API-driven workflows to simulate real-time service assignment and tracking\n\n\u2022 Structured system for future AI-based optimization and automation of decision logic\n\n\n\nAI-Powered Customer Query Automation System\n\n\u2022 Built AI-powered query resolution system using RAG for contextual responses\n\n\u2022 Automated query handling workflows using n8n to reduce manual intervention\n\n\u2022 Structured outputs for downstream processing and reliability\n\n\u2022 Designed system to improve response consistency and reduce operational load\n\n\n\n\n\n<u>EDUCATION</u>\n\nB.E. in Electronics and Communication Engineering\n\n MVJ College of Engineering, Bangalore\n\n 2025\n\nPre-University Course (Science)\n\n Sri Vidyanikethan PU College, Gangavathi\n\n 2020\n\nSecondary School (CBSE)\n\n Sri Chaitanya Techno School, Sindhanur\n\n 2018\n\n\nAI SYSTEM OPERATIONS & EXPERIMENTATION\n\n\n\u2022 Experimented with LLM tools (ChatGPT, OpenAI APIs) across multiple use cases to evaluate performance and reliability\n\n\u2022 Designed reusable prompt patterns for tasks like classification, summarization, and structured output generation\n\n\u2022 Explored different workflow designs to improve consistency and reduce failure cases in AI systems\n\n\u2022 Created structured approaches for interacting with AI systems to ensure predictable and scalable usage\n\n\n\n\n\nDECLARATION\n\n\n\nI hereby declare that the above information is true and correct to the best of my knowledge and belief.\n\nPlace: Bangalore\n\n                                                                                                       Sushith M",
+  "gpt_raw_response": "{\n  \"name\": \"Sushith M\",\n  \"email\": \"sushith726@gmail.com\",\n  \"phone\": \"8088588614\",\n  \"location\": \"Bangalore\",\n  \"skills\": [\n    \"RAG\",\n    \"Agentic Workflows\",\n    \"Prompt Engineering\",\n    \"Context Management\",\n    \"Agentic AI\",\n    \"Hallucination Reduction\",\n    \"Supervised Learning\",\n    \"Classification\",\n    \"Clustering\",\n    \"Basic Forecasting Concepts\",\n    \"Planner Agents\",\n    \"Task Decomposition\",\n    \"Coordinator Agents\",\n    \"Tool Calling\",\n    \"Multi-Agent Orchestration\",\n    \"OpenAI API\",\n    \"LangChain\",\n    \"Langraph\",\n    \"Pinecone\",\n    \"n8n\",\n    \"Airtable\",\n    \"Notion\",\n    \"Python\",\n    \"FastAPI\",\n    \"REST APIs\",\n    \"JSON Structuring\",\n    \"Semantic Search\",\n    \"Embeddings\",\n    \"Data Structuring\",\n    \"Basic Metrics Tracking\",\n    \"Workflow Design\",\n    \"Allocation Logic\",\n    \"Scalable Pipelines\"\n  ],\n  \"experience_years\": 0,\n  \"education\": [\n    {\n      \"school\": \"MVJ College of Engineering, Bangalore\",\n      \"degree\": \"B.E. in Electronics and Communication Engineering\",\n      \"year\": \"2025\"\n    },\n    {\n      \"school\": \"Sri Vidyanikethan PU College, Gangavathi\",\n      \"degree\": \"Pre-University Course (Science)\",\n      \"year\": \"2020\"\n    },\n    {\n      \"school\": \"Sri Chaitanya Techno School, Sindhanur\",\n      \"degree\": \"Secondary School (CBSE)\",\n      \"year\": \"2018\"\n    }\n  ],\n  \"experience\": [],\n  \"projects\": [\n    {\n      \"title\": \"Product Feedback Intelligence & Roadmap Prioritization Engine (Capstone Project)\",\n      \"description\": \"Designed and deployed an AI system to convert unstructured customer feedback into actionable product insights. Built multi-step LLM workflows for classification, clustering, and prioritization of feedback themes. Integrated RAG pipeline using Pinecone to enable contextual analysis across large feedback datasets. Automated end-to-end workflow (ingestion -processing -Jira ticket creation) using n8n. Improved decision-making speed by structuring insights into prioritized outputs for product teams. Ensured reliability through deduplication, structured JSON outputs, and controlled execution. Evaluated system outputs across multiple runs to improve accuracy and consistency of AI responses. Iterated on prompts and workflow logic based on observed performance patterns. Documented workflow steps, input-output structures, and system behavior for reuse and scalability.\",\n      \"technologies\": [\n        \"Python\",\n        \"OpenAI API\",\n        \"LangChain\",\n        \"Pinecone\",\n        \"n8n\",\n        \"FastAPI\",\n        \"Airtable\",\n        \"Jira\"\n      ],\n      \"duration\": null\n    },\n    {\n      \"title\": \"WhatsApp-Based Hyperlocal Services Platform (Ongoing Project)\",\n      \"description\": \"Designed backend system with intelligent allocation logic based on scoring (distance, rating, availability). Built API-driven workflows to simulate real-time service assignment and tracking. Structured system for future AI-based optimization and automation of decision logic.\",\n      \"technologies\": [],\n      \"duration\": null\n    },\n    {\n      \"title\": \"AI-Powered Customer Query Automation System\",\n      \"description\": \"Built AI-powered query resolution system using RAG for contextual responses. Automated query handling workflows using n8n to reduce manual intervention. Structured outputs for downstream processing and reliability. Designed system to improve response consistency and reduce operational load.\",\n      \"technologies\": [],\n      \"duration\": null\n    }\n  ],\n  \"certifications\": [],\n  \"languages\": []\n}",
+  "validation_errors": [],
+  "final_structured_json": {
+    "name": "Sushith M",
+    "email": "sushith726@gmail.com",
+    "phone": "8088588614",
+    "skills": [
+      "RAG",
+      "Agentic Workflows",
+      "Prompt Engineering",
+      "Context Management",
+      "Agentic AI",
+      "Hallucination Reduction",
+      "Supervised Learning",
+      "Classification",
+      "Clustering",
+      "Basic Forecasting Concepts",
+      "Planner Agents",
+      "Task Decomposition",
+      "Coordinator Agents",
+      "Tool Calling",
+      "Multi-Agent Orchestration",
+      "OpenAI API",
+      "LangChain",
+      "Langraph",
+      "Pinecone",
+      "n8n",
+      "Airtable",
+      "Notion",
+      "Python",
+      "FastAPI",
+      "REST APIs",
+      "JSON Structuring",
+      "Semantic Search",
+      "Embeddings",
+      "Data Structuring",
+      "Basic Metrics Tracking",
+      "Workflow Design",
+      "Allocation Logic",
+      "Scalable Pipelines"
+    ],
+    "experience_years": 0.0,
+    "education": [
+      {
+        "school": "MVJ College of Engineering, Bangalore",
+        "degree": "B.E. in Electronics and Communication Engineering",
+        "year": "2025"
+      },
+      {
+        "school": "Sri Vidyanikethan PU College, Gangavathi",
+        "degree": "Pre-University Course (Science)",
+        "year": "2020"
+      },
+      {
+        "school": "Sri Chaitanya Techno School, Sindhanur",
+        "degree": "Secondary School (CBSE)",
+        "year": "2018"
+      }
+    ],
+    "experience": [],
+    "projects": [
+      {
+        "title": "Product Feedback Intelligence & Roadmap Prioritization Engine (Capstone Project)",
+        "description": "Designed and deployed an AI system to convert unstructured customer feedback into actionable product insights. Built multi-step LLM workflows for classification, clustering, and prioritization of feedback themes. Integrated RAG pipeline using Pinecone to enable contextual analysis across large feedback datasets. Automated end-to-end workflow (ingestion -processing -Jira ticket creation) using n8n. Improved decision-making speed by structuring insights into prioritized outputs for product teams. Ensured reliability through deduplication, structured JSON outputs, and controlled execution. Evaluated system outputs across multiple runs to improve accuracy and consistency of AI responses. Iterated on prompts and workflow logic based on observed performance patterns. Documented workflow steps, input-output structures, and system behavior for reuse and scalability.",
+        "technologies": [
+          "Python",
+          "OpenAI API",
+          "LangChain",
+          "Pinecone",
+          "n8n",
+          "FastAPI",
+          "Airtable",
+          "Jira"
+        ],
+        "duration": null
+      },
+      {
+        "title": "WhatsApp-Based Hyperlocal Services Platform (Ongoing Project)",
+        "description": "Designed backend system with intelligent allocation logic based on scoring (distance, rating, availability). Built API-driven workflows to simulate real-time service assignment and tracking. Structured system for future AI-based optimization and automation of decision logic.",
+        "technologies": [],
+        "duration": null
+      },
+      {
+        "title": "AI-Powered Customer Query Automation System",
+        "description": "Built AI-powered query resolution system using RAG for contextual responses. Automated query handling workflows using n8n to reduce manual intervention. Structured outputs for downstream processing and reliability. Designed system to improve response consistency and reduce operational load.",
+        "technologies": [],
+        "duration": null
+      }
+    ],
+    "location": "Bangalore",
+    "certifications": [],
+    "languages": []
+  },
+  "mismatches_audit": {}
+}

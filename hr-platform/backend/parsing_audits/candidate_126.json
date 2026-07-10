@@ -1,0 +1,52 @@
+{
+  "candidate_id": 126,
+  "timestamp": "2026-07-09T05:06:07.807345",
+  "raw_llama_parse_output": "Dwaraka D\nE-mail: <u>reddydwaraka388@gmail.com</u>\nMobile: 9380843421\n\nCAREER OBJECTIVE\n\n\nTo pursue a highly rewarding career with challenging responsibility in IT Service Industry where I can utilize my IT\nexpertise to achieve customer satisfaction and there-by contribute to my employer's business growth.\nTECHNICAL SKILLS\n\n\nVMware vSphere 8 & 7\nVMware vRealize operations\nWindows server administration\nZabbix and Servicenow\n\nPROFESSIONAL ROADMAP\n\n\n Working as a system administrator with Santric technologies from Sep 2024 to Present.\n Worked as a system administrator with WNS from JUN 2019 to Aug 2024\n\nROLES & RESPONSIBILITIES:\n\nVMware vSphere:\n Experienced with VMware vSphere 6.x, 7 & 8 administration\n Installation, configuration, and management of ESXi hosts\n VM creation, cloning, templates, and snapshots\n Resource management (vCPU, vRAM, storage)\n Experience in VMware vRealize operations\n VMware vSphere Backup and replication\n Experience with PowerCLI.\n Firmware and Bios upgrade for HP and Dell hardware\n Creating profiles and applying the profiles to the blades\n Manage virtual infrastructure & monitoring in 24/7 environment for Esx Host & VM's\n Installation & Configuration VM\u2019s on ESXi Host (Windows 2016/2019/2022).\n Installed & update VM tool on Windows\n Creating and managing VMware cluster. Enabling HA and DRS features.\n Configurations of Virtual switches and network connections.\n\n\nAs per requirement for requester performing snapshots, cloning, cold migrations and hot migrations.\nDeploy Vm\u2019s from templates & import .OVF format Vm's.\nTroubleshooting virtual machine issues with the help of logs.\nRegular System Administration tasks like User Accounts, access, Permissions, Security health check.\nApply new release patches & updates install on ESXi & Windows Servers\nSymantec endpoint protection server deployment and client installation\nHandling Administration task for ESXi & Windows Servers.\nConfiguring & Manage users, groups, permissions and roles.\nAdding a New Virtual Disk and Extending Existing Virtual Disk Hardware monitoring of IBM.\nRegular System Administration tasks like User Accounts, access, Permissions, Security health check.\nApply new release patches & updates install on ESXi & Windows Servers\nConfiguring & Manage users, groups, permissions and roles.\nCreating and Managing snapshots on the VMs.\nWorking with incident, service requests and problem management and ITIL Processes.\nWorking with incident, change requests.\n\nVMware vrops:\n\nDeploy Aria Operations and integrate with vcenters\nConfigure the Alerts and notifications\nCreate view and report templates\nGenerate reports for customer infrastructure for capacity analysis\nConfigure Dashboard for better visibilities of infra details\n\nACADEMIC SUMMARY\n\nBSC computers from SV University in 2018.",
+  "gpt_prompt": "Extract the following JSON from the resume text below.\nReturn ONLY a valid JSON object with these exact keys. Do not add any text outside the JSON.\n\n{\n  \"name\": null,\n  \"email\": null,\n  \"phone\": null,\n  \"location\": null,\n  \"skills\": [],\n  \"experience_years\": 0,\n  \"education\": [\n    {\"school\": null, \"degree\": null, \"year\": null}\n  ],\n  \"experience\": [\n    {\n      \"company\": null,\n      \"title\": null,\n      \"start_date\": null,\n      \"end_date\": null,\n      \"duration\": null,\n      \"description\": null\n    }\n  ],\n  \"projects\": [\n    {\n      \"title\": null,\n      \"description\": null,\n      \"technologies\": [],\n      \"duration\": null\n    }\n  ],\n  \"certifications\": [],\n  \"languages\": []\n}\n\nRULES REMINDER:\n- experience[] = PAID EMPLOYMENT ONLY (salary/wage from a real employer).\n- projects[] = everything else: university capstones, personal projects,   hackathons, open-source, internships listed without company, etc.\n- experience_years = always 0 (Python calculates this, not you).\n- If experience[] is empty (no paid employment found), that is correct.\n- Do NOT invent company names. If no employer name exists for a role,   set company to null and move the entry to projects[].\n- start_date and end_date: copy the exact text from the resume   (e.g. 'Jan 2023', '2023-01', 'Present'). null if not written.\n\nResume text:\nDwaraka D\nE-mail: <u>reddydwaraka388@gmail.com</u>\nMobile: 9380843421\n\nCAREER OBJECTIVE\n\n\nTo pursue a highly rewarding career with challenging responsibility in IT Service Industry where I can utilize my IT\nexpertise to achieve customer satisfaction and there-by contribute to my employer's business growth.\nTECHNICAL SKILLS\n\n\nVMware vSphere 8 & 7\nVMware vRealize operations\nWindows server administration\nZabbix and Servicenow\n\nPROFESSIONAL ROADMAP\n\n\n Working as a system administrator with Santric technologies from Sep 2024 to Present.\n Worked as a system administrator with WNS from JUN 2019 to Aug 2024\n\nROLES & RESPONSIBILITIES:\n\nVMware vSphere:\n Experienced with VMware vSphere 6.x, 7 & 8 administration\n Installation, configuration, and management of ESXi hosts\n VM creation, cloning, templates, and snapshots\n Resource management (vCPU, vRAM, storage)\n Experience in VMware vRealize operations\n VMware vSphere Backup and replication\n Experience with PowerCLI.\n Firmware and Bios upgrade for HP and Dell hardware\n Creating profiles and applying the profiles to the blades\n Manage virtual infrastructure & monitoring in 24/7 environment for Esx Host & VM's\n Installation & Configuration VM\u2019s on ESXi Host (Windows 2016/2019/2022).\n Installed & update VM tool on Windows\n Creating and managing VMware cluster. Enabling HA and DRS features.\n Configurations of Virtual switches and network connections.\n\n\nAs per requirement for requester performing snapshots, cloning, cold migrations and hot migrations.\nDeploy Vm\u2019s from templates & import .OVF format Vm's.\nTroubleshooting virtual machine issues with the help of logs.\nRegular System Administration tasks like User Accounts, access, Permissions, Security health check.\nApply new release patches & updates install on ESXi & Windows Servers\nSymantec endpoint protection server deployment and client installation\nHandling Administration task for ESXi & Windows Servers.\nConfiguring & Manage users, groups, permissions and roles.\nAdding a New Virtual Disk and Extending Existing Virtual Disk Hardware monitoring of IBM.\nRegular System Administration tasks like User Accounts, access, Permissions, Security health check.\nApply new release patches & updates install on ESXi & Windows Servers\nConfiguring & Manage users, groups, permissions and roles.\nCreating and Managing snapshots on the VMs.\nWorking with incident, service requests and problem management and ITIL Processes.\nWorking with incident, change requests.\n\nVMware vrops:\n\nDeploy Aria Operations and integrate with vcenters\nConfigure the Alerts and notifications\nCreate view and report templates\nGenerate reports for customer infrastructure for capacity analysis\nConfigure Dashboard for better visibilities of infra details\n\nACADEMIC SUMMARY\n\nBSC computers from SV University in 2018.",
+  "gpt_raw_response": "{\n  \"name\": \"Dwaraka D\",\n  \"email\": \"reddydwaraka388@gmail.com\",\n  \"phone\": \"9380843421\",\n  \"location\": null,\n  \"skills\": [\n    \"VMware vSphere 8 & 7\",\n    \"VMware vRealize operations\",\n    \"Windows server administration\",\n    \"Zabbix and Servicenow\"\n  ],\n  \"experience_years\": 0,\n  \"education\": [\n    {\n      \"school\": \"SV University\",\n      \"degree\": \"BSC computers\",\n      \"year\": \"2018\"\n    }\n  ],\n  \"experience\": [\n    {\n      \"company\": \"Santric technologies\",\n      \"title\": \"system administrator\",\n      \"start_date\": \"Sep 2024\",\n      \"end_date\": \"Present\",\n      \"duration\": null,\n      \"description\": null\n    },\n    {\n      \"company\": \"WNS\",\n      \"title\": \"system administrator\",\n      \"start_date\": \"JUN 2019\",\n      \"end_date\": \"Aug 2024\",\n      \"duration\": null,\n      \"description\": null\n    }\n  ],\n  \"projects\": [],\n  \"certifications\": [],\n  \"languages\": []\n}",
+  "validation_errors": [],
+  "final_structured_json": {
+    "name": "Dwaraka D",
+    "email": "reddydwaraka388@gmail.com",
+    "phone": "9380843421",
+    "skills": [
+      "VMware vSphere 8 & 7",
+      "VMware vRealize operations",
+      "Windows server administration",
+      "Zabbix and Servicenow"
+    ],
+    "experience_years": 7.0,
+    "education": [
+      {
+        "school": "SV University",
+        "degree": "BSC computers",
+        "year": "2018"
+      }
+    ],
+    "experience": [
+      {
+        "company": "Santric technologies",
+        "title": "system administrator",
+        "start_date": "Sep 2024",
+        "end_date": "Present",
+        "duration": null,
+        "description": null
+      },
+      {
+        "company": "WNS",
+        "title": "system administrator",
+        "start_date": "JUN 2019",
+        "end_date": "Aug 2024",
+        "duration": null,
+        "description": null
+      }
+    ],
+    "projects": [],
+    "location": null,
+    "certifications": [],
+    "languages": []
+  },
+  "mismatches_audit": {
+    "experience_years": "Experience years value 7.0 is not explicitly mentioned in the text (likely inferred/calculated)."
+  }
+}

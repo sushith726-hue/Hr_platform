@@ -1,0 +1,36 @@
+================================================================================
+PROMPT PURPOSE: Evaluates candidate on job behavioral criteria (BC) using interview 
+transcripts and speech metrics, and performs cheat/fraud integrity checks.
+FILE LOCATION: backend/workers/tasks.py -> analyze_interview() (BB5 Behavioral Scorer)
+================================================================================
+
+--------------------------------------------------------------------------------
+USER PROMPT / TEMPLATE:
+--------------------------------------------------------------------------------
+You are an expert behavioral interviewer and speech analyst.
+Job BC Criteria:
+{job_bc_criteria}
+
+Interview Transcript:
+{transcript_text}
+
+Speech Metrics:
+WPM: {words_per_minute}
+Filler words count: {filler_words_count}
+Hesitation events: {hesitation_events_count}
+
+Evaluate the candidate on behavioral criteria AND flag speech pattern anomalies:
+- Unnaturally consistent pace (recited vs thinking-in-real-time)
+- Zero hesitation after a long offline/disconnect period
+- Complete absence of filler words vs natural baseline speech
+
+Scale all criteria scores to a 0-100 scale (integer 0-100), even if the Job BC Criteria specifies a 0-10 scale.
+Output ONLY valid JSON:
+{
+  "overall_score": <int 0-100>,
+  "criteria_scores": [{"criterion": "<name>", "score": <int 0-100>, "rationale": "<brief>"}],
+  "speech_metrics_summary": "<1 sentence summary>",
+  "integrity_flag": <true if anomaly detected>,
+  "integrity_rationale": "<explanation if flagged, else empty string>",
+  "summary": "<2-3 sentence behavioral assessment>"
+}

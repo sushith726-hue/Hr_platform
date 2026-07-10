@@ -1,0 +1,585 @@
+[
+  {
+    "timestamp": "2026-07-08T08:01:22.985205+00:00",
+    "step": "webhook_received",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "event": "egress_finished",
+      "room_name": "room_8",
+      "payload": {
+        "event": "egress_finished",
+        "roomName": "room_8",
+        "downloadUrl": "https://example.com/mock_recording.mp4"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:01:23.047129+00:00",
+    "step": "bb4_dispatched",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "recording_url": "https://example.com/mock_recording.mp4",
+      "room_name": "room_8"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:01:23.157051+00:00",
+    "step": "bb4_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "recording_url": "https://example.com/mock_recording.mp4"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:01:23.160234+00:00",
+    "step": "bb4_download_failed_fallback",
+    "interview_id": 8,
+    "status": "warning",
+    "details": {
+      "recording_url": "https://example.com/mock_recording.mp4"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:01:23.609871+00:00",
+    "step": "bb4_ffmpeg_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "command": "ffmpeg -y -i /tmp/tmplvqz8te4/mixed.mp4 -filter_complex [0:a]channelsplit=channel_layout=stereo[left][right] -map [right] -ac 1 -c:a libopus -b:a 32k /tmp/tmplvqz8te4/candidate_voice.ogg"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:01:23.740865+00:00",
+    "step": "bb4_ffmpeg_failed",
+    "interview_id": 8,
+    "status": "failed",
+    "details": {
+      "stderr": "    : isom\n    minor_version   : 512\n    compatible_brands: isomiso2mp41\n    encoder         : Lavf61.7.103\n  Duration: 00:00:05.00, start: 0.000000, bitrate: 4 kb/s\n  Stream #0:0[0x1](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 2 kb/s (default)\n      Metadata:\n        handler_name    : SoundHandler\n        vendor_id       : [0][0][0][0]\n[fc#0 @ 0x64eab2fe5040] Filter 'channelsplit' has output 0 (left) unconnected\nError binding filtergraph inputs/outputs: Invalid argument\n"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:01:23.743256+00:00",
+    "step": "bb4_failed",
+    "interview_id": 8,
+    "status": "failed",
+    "details": {
+      "error": "FFmpeg failed:     : isom\n    minor_version   : 512\n    compatible_brands: isomiso2mp41\n    encoder         : Lavf61.7.103\n  Duration: 00:00:05.00, start: 0.000000, bitrate: 4 kb/s\n  Stream #0:0[0x1](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 2 kb/s (default)\n      Metadata:\n        handler_name    : SoundHandler\n        vendor_id       : [0][0][0][0]\n[fc#0 @ 0x64eab2fe5040] Filter 'channelsplit' has output 0 (left) unconnected\nError binding filtergraph inputs/outputs: Invalid argument\n"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:02:55.952035+00:00",
+    "step": "webhook_received",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "event": "egress_finished",
+      "room_name": "room_8",
+      "payload": {
+        "event": "egress_finished",
+        "roomName": "room_8",
+        "downloadUrl": "https://example.com/mock_recording.mp4"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:02:56.016594+00:00",
+    "step": "bb4_dispatched",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "recording_url": "https://example.com/mock_recording.mp4",
+      "room_name": "room_8"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:02:56.025917+00:00",
+    "step": "bb4_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "recording_url": "https://example.com/mock_recording.mp4"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:02:56.026953+00:00",
+    "step": "bb4_download_failed_fallback",
+    "interview_id": 8,
+    "status": "warning",
+    "details": {
+      "recording_url": "https://example.com/mock_recording.mp4"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:02:56.312101+00:00",
+    "step": "bb4_ffmpeg_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "command": "ffmpeg -y -i /tmp/tmp0jge9sby/mixed.mp4 -filter_complex [0:a]channelsplit=channel_layout=stereo[left][right] -map [right] -ac 1 -c:a libopus -b:a 32k /tmp/tmp0jge9sby/candidate_voice.ogg"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:02:56.458385+00:00",
+    "step": "bb4_ffmpeg_failed",
+    "interview_id": 8,
+    "status": "failed",
+    "details": {
+      "stderr": "    : isom\n    minor_version   : 512\n    compatible_brands: isomiso2mp41\n    encoder         : Lavf61.7.103\n  Duration: 00:00:05.00, start: 0.000000, bitrate: 4 kb/s\n  Stream #0:0[0x1](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 2 kb/s (default)\n      Metadata:\n        handler_name    : SoundHandler\n        vendor_id       : [0][0][0][0]\n[fc#0 @ 0x60380a38b040] Filter 'channelsplit' has output 0 (left) unconnected\nError binding filtergraph inputs/outputs: Invalid argument\n"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:02:56.461806+00:00",
+    "step": "bb4_failed",
+    "interview_id": 8,
+    "status": "failed",
+    "details": {
+      "error": "FFmpeg failed:     : isom\n    minor_version   : 512\n    compatible_brands: isomiso2mp41\n    encoder         : Lavf61.7.103\n  Duration: 00:00:05.00, start: 0.000000, bitrate: 4 kb/s\n  Stream #0:0[0x1](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 2 kb/s (default)\n      Metadata:\n        handler_name    : SoundHandler\n        vendor_id       : [0][0][0][0]\n[fc#0 @ 0x60380a38b040] Filter 'channelsplit' has output 0 (left) unconnected\nError binding filtergraph inputs/outputs: Invalid argument\n"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:13.142237+00:00",
+    "step": "webhook_received",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "event": "egress_finished",
+      "room_name": "room_8",
+      "payload": {
+        "event": "egress_finished",
+        "roomName": "room_8",
+        "downloadUrl": "https://example.com/mock_recording.mp4"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:13.154915+00:00",
+    "step": "bb4_dispatched",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "recording_url": "https://example.com/mock_recording.mp4",
+      "room_name": "room_8"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:29.913489+00:00",
+    "step": "bb4_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "recording_url": "https://example.com/mock_recording.mp4"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:29.915673+00:00",
+    "step": "bb4_download_failed_fallback",
+    "interview_id": 8,
+    "status": "warning",
+    "details": {
+      "recording_url": "https://example.com/mock_recording.mp4"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:30.262076+00:00",
+    "step": "bb4_ffmpeg_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "command": "ffmpeg -y -i /tmp/tmpyvwovlcd/mixed.mp4 -filter_complex [0:a]pan=mono|c0=c1 -ac 1 -c:a libopus -b:a 32k /tmp/tmpyvwovlcd/candidate_voice.ogg"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:30.420898+00:00",
+    "step": "bb4_ffmpeg_complete",
+    "interview_id": 8,
+    "status": "success",
+    "details": {}
+  },
+  {
+    "timestamp": "2026-07-08T08:03:30.703493+00:00",
+    "step": "bb4_s3_upload_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "s3_key": "user_voice/8/candidate_voice.ogg",
+      "attempt": 1
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:30.869615+00:00",
+    "step": "bb4_s3_upload_complete",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "voice_ogg_url": "s3://livekit-bucket/user_voice/8/candidate_voice.ogg"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:30.878466+00:00",
+    "step": "bb4_completed",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "voice_ogg_url": "s3://livekit-bucket/user_voice/8/candidate_voice.ogg"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:30.999953+00:00",
+    "step": "bb5_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {}
+  },
+  {
+    "timestamp": "2026-07-08T08:03:31.018066+00:00",
+    "step": "bb5_vic_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "prompt_length": 1963
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:38.962940+00:00",
+    "step": "bb5_vic_complete",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "vic_score": 75,
+      "attempt": 1
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:39.434396+00:00",
+    "step": "bb5_stt_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "s3_key": "user_voice/8/candidate_voice.ogg"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:39.609447+00:00",
+    "step": "bb5_stt_attempt_failed",
+    "interview_id": 8,
+    "status": "warning",
+    "details": {
+      "attempt": 1,
+      "error": "404 Client Error: Not Found for url: https://api.smallest.ai/v1/speech-to-text"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:40.774257+00:00",
+    "step": "bb5_stt_attempt_failed",
+    "interview_id": 8,
+    "status": "warning",
+    "details": {
+      "attempt": 2,
+      "error": "404 Client Error: Not Found for url: https://api.smallest.ai/v1/speech-to-text"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:42.955578+00:00",
+    "step": "bb5_stt_attempt_failed",
+    "interview_id": 8,
+    "status": "warning",
+    "details": {
+      "attempt": 3,
+      "error": "404 Client Error: Not Found for url: https://api.smallest.ai/v1/speech-to-text"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:46.958308+00:00",
+    "step": "bb5_stt_failed_all_attempts",
+    "interview_id": 8,
+    "status": "warning",
+    "details": {
+      "msg": "Speech metrics unavailable, proceeding with defaults"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:46.961156+00:00",
+    "step": "bb5_bc_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "prompt_length": 2339
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:50.846739+00:00",
+    "step": "bb5_bc_complete",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "bc_score": 75,
+      "integrity": true,
+      "attempt": 1
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:50.864785+00:00",
+    "step": "bb5_completed",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "vic_score": 75,
+      "bc_score": 75
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:51.142997+00:00",
+    "step": "bb6_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {}
+  },
+  {
+    "timestamp": "2026-07-08T08:03:51.155229+00:00",
+    "step": "bb6_scores_gathered",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "match_score": 0,
+      "vic_score": 75,
+      "bc_score": 75,
+      "overall_score": 45
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:51.156206+00:00",
+    "step": "bb6_summary_generation_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {}
+  },
+  {
+    "timestamp": "2026-07-08T08:03:53.821369+00:00",
+    "step": "bb6_summary_generation_complete",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "summary": "Sushith M shows a strong grasp of technical concepts and troubleshooting methodologies, scoring well in the technical and behavioral assessments. However, the low resume match indicates a potential misalignment with the role's requirements, and improvements in communication clarity are needed. I recommend further review to assess if his technical skills can compensate for the resume concerns."
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:53.843422+00:00",
+    "step": "bb6_pdf_generated",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "pdf_size_bytes": 3858
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:54.242155+00:00",
+    "step": "bb6_s3_upload_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "s3_key": "reports/66.pdf",
+      "attempt": 1
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:54.330540+00:00",
+    "step": "bb6_s3_upload_complete",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "report_pdf_url": "s3://livekit-bucket/reports/66.pdf"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T08:03:54.354823+00:00",
+    "step": "bb6_completed",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "overall_score": 45,
+      "verdict": "Needs Review",
+      "report_pdf_url": "s3://livekit-bucket/reports/66.pdf"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:03:51.374839+00:00",
+    "step": "bb5_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {}
+  },
+  {
+    "timestamp": "2026-07-08T09:03:51.391792+00:00",
+    "step": "bb5_vic_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "prompt_length": 2076
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:03:55.535276+00:00",
+    "step": "bb5_vic_complete",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "vic_score": 75,
+      "attempt": 1
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:03:56.095974+00:00",
+    "step": "bb5_stt_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "s3_key": "user_voice/8/candidate_voice.ogg"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:03:56.246307+00:00",
+    "step": "bb5_stt_attempt_failed",
+    "interview_id": 8,
+    "status": "warning",
+    "details": {
+      "attempt": 1,
+      "error": "404 Client Error: Not Found for url: https://api.smallest.ai/v1/speech-to-text"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:03:57.618117+00:00",
+    "step": "bb5_stt_attempt_failed",
+    "interview_id": 8,
+    "status": "warning",
+    "details": {
+      "attempt": 2,
+      "error": "404 Client Error: Not Found for url: https://api.smallest.ai/v1/speech-to-text"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:03:59.842950+00:00",
+    "step": "bb5_stt_attempt_failed",
+    "interview_id": 8,
+    "status": "warning",
+    "details": {
+      "attempt": 3,
+      "error": "404 Client Error: Not Found for url: https://api.smallest.ai/v1/speech-to-text"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:04:03.845583+00:00",
+    "step": "bb5_stt_failed_all_attempts",
+    "interview_id": 8,
+    "status": "warning",
+    "details": {
+      "msg": "Speech metrics unavailable, proceeding with defaults"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:04:03.849584+00:00",
+    "step": "bb5_bc_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "prompt_length": 2451
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:04:08.876133+00:00",
+    "step": "bb5_bc_complete",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "bc_score": 75,
+      "integrity": true,
+      "attempt": 1
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:04:08.889410+00:00",
+    "step": "bb5_completed",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "vic_score": 75,
+      "bc_score": 75
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:04:09.208095+00:00",
+    "step": "bb6_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {}
+  },
+  {
+    "timestamp": "2026-07-08T09:04:09.222997+00:00",
+    "step": "bb6_scores_gathered",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "match_score": 0,
+      "vic_score": 75,
+      "bc_score": 75,
+      "overall_score": 45
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:04:09.224264+00:00",
+    "step": "bb6_summary_generation_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {}
+  },
+  {
+    "timestamp": "2026-07-08T09:04:11.350895+00:00",
+    "step": "bb6_summary_generation_complete",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "summary": "Sushith M shows a solid foundational understanding of infrastructure technologies and troubleshooting, scoring well in technical and behavioral assessments. However, their communication style, marked by jargon and a lack of natural speech, may hinder effective customer interactions. I recommend further review to determine if additional training in communication skills could enhance their fit for the Technical Support role."
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:04:11.375506+00:00",
+    "step": "bb6_pdf_generated",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "pdf_size_bytes": 4007
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:04:11.850431+00:00",
+    "step": "bb6_s3_upload_started",
+    "interview_id": 8,
+    "status": "processing",
+    "details": {
+      "s3_key": "reports/66.pdf",
+      "attempt": 1
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:04:11.932835+00:00",
+    "step": "bb6_s3_upload_complete",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "report_pdf_url": "s3://livekit-bucket/reports/66.pdf"
+    }
+  },
+  {
+    "timestamp": "2026-07-08T09:04:11.947325+00:00",
+    "step": "bb6_completed",
+    "interview_id": 8,
+    "status": "success",
+    "details": {
+      "overall_score": 45,
+      "verdict": "Needs Review",
+      "report_pdf_url": "s3://livekit-bucket/reports/66.pdf"
+    }
+  }
+]

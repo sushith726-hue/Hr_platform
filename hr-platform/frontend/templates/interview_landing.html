@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Voice Interview Portal | TalentStream</title>
+    <!-- Outfit Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- LiveKit Client SDK v2 (UMD global: LivekitClient) -->
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.20.0/dist/livekit-client.umd.min.js"></script>
+    <style>
+        :root {
+            --font-primary: 'Outfit', sans-serif;
+            --bg-app: #0f172a;
+            --bg-panel: rgba(30, 41, 59, 0.7);
+            --bg-surface: rgba(51, 65, 85, 0.5);
+            --border-color: rgba(71, 85, 105, 0.4);
+            --border-focus: #3b82f6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --color-primary: #3b82f6;
+            --color-primary-hover: #2563eb;
+            --color-success: #10b981;
+            --color-danger: #ef4444;
+            --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Ambient background glow */
+        .glow-bg {
+            position: absolute;
+            top: -20%;
+            left: -20%;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .glow-bg-right {
+            position: absolute;
+            bottom: -20%;
+            right: -20%;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Glass Container */
+        .portal-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: var(--shadow-premium);
+            z-index: 1;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Header */
+        .portal-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        /* Landing / Intro State */
+        .intro-state {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .welcome-box {
+            text-align: center;
+        }
+
+        .welcome-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .job-tag {
+            display: inline-block;
+            background: var(--bg-surface);
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+            margin-top: 0.5rem;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .detail-item h4 {
+            font-size: 1rem;
+            color: var(--color-primary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .detail-item p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* System Checker */
+        .system-check {
+            background: rgba(15, 23, 42, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .check-label {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .check-status {
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        .status-pending { background: #f59e0b20; color: #f59e0b; }
+        .status-success { background: #10b98120; color: #10b981; }
+        .status-error { background: #ef444420; color: #ef4444; }
+
+        .btn {
+            font-family: var(--font-primary);
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--color-primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+        }
+
+        .btn-primary:disabled {
+            background-color: var(--bg-surface);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-check-mic {
+            background-color: var(--bg-surface);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-check-mic:hover {
+            background-color: var(--border-color);
+        }
+
+        .mic-vol-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-surface);
+            border-radius: 3px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .mic-vol-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--color-success);
+            transition: width 0.1s ease;
+        }
+
+        /* Active Interview State */
+        .interview-state {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 2.5rem;
+            text-align: center;
+        }
+
+        /* Pulsing voice assistant indicator */
+        .assistant-avatar-container {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 2rem 0;
+        }
+
+        .avatar-glow-1, .avatar-glow-2 {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%);
+            animation: pulse-avatar 2s infinite ease-in-out;
+            z-index: 0;
+        }
+
+        .avatar-glow-2 {
+            animation-delay: 1s;
+        }
+
+        .assistant-avatar {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .assistant-avatar svg {
+            width: 44px;
+            height: 44px;
+            fill: #ffffff;
+        }
+
+        .assistant-avatar.speaking {
+            animation: speaking-glow 1.5s infinite alternate ease-in-out;
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.7);
+        }
+
+        @keyframes pulse-avatar {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { opacity: 0.6; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+
+        @keyframes speaking-glow {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.08); }
+        }
+
+        .status-indicator {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .status-subtext {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .transcript-live-box {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            min-height: 120px;
+            max-height: 200px;
+            overflow-y: auto;
+            text-align: left;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .transcript-line {
+            margin-bottom: 0.75rem;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .line-speaker {
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-right: 0.5rem;
+        }
+
+        .line-speaker.candidate {
+            color: var(--color-success);
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn-mute {
+            background-color: var(--bg-surface);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-mute.muted {
+            background-color: var(--color-danger);
+            border-color: var(--color-danger);
+            color: #ffffff;
+        }
+
+        .btn-end {
+            background-color: var(--color-danger);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-end:hover {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* End Interview confirmation overlay */
+        .end-confirm-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .end-confirm-overlay.visible { display: flex; }
+        .end-confirm-box {
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: var(--shadow-premium);
+            animation: fadeIn 0.2s ease-out;
+        }
+        .end-confirm-box h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-main);
+        }
+        .end-confirm-box p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        .end-confirm-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        .end-confirm-actions .btn-cancel-end {
+            background: var(--bg-surface);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 0.7rem 1.75rem;
+            border-radius: 8px;
+            font-family: var(--font-primary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .end-confirm-actions .btn-cancel-end:hover { background: var(--border-color); }
+        .end-confirm-actions .btn-confirm-end {
+            background: var(--color-danger);
+            color: #fff;
+            border: none;
+            padding: 0.7rem 1.75rem;
+            border-radius: 8px;
+            font-family: var(--font-primary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(239,68,68,0.35);
+            transition: background 0.2s, transform 0.15s;
+        }
+        .end-confirm-actions .btn-confirm-end:hover { background: #dc2626; transform: translateY(-1px); }
+        .end-confirm-actions .btn-confirm-end:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    </style>
+</head>
+<body>
+    <div class="glow-bg"></div>
+    <div class="glow-bg-right"></div>
+
+    <div class="portal-container" id="portalContainer">
+        <!-- Header -->
+        <div class="portal-header">
+            <h1 class="logo">TalentStream</h1>
+            <p class="subtitle">AI Voice Assessment Portal</p>
+        </div>
+
+        <!-- State 1: Preparation / Intro -->
+        <div class="intro-state" id="introState">
+            <div class="welcome-box">
+                <h2 class="welcome-title">Welcome, {{ candidate.name }}</h2>
+                <div class="job-tag">{{ job.title }}</div>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <h4>Department</h4>
+                    <p>{{ job.department }}</p>
+                </div>
+                <div class="detail-item">
+                    <h4>Voice Assessment Instructions</h4>
+                    <p>You will speak to our automated AI voice interviewer. The interviewer will ask 4-5 core questions matching the position requirements. Each response can be up to 2-3 minutes long. Ensure you speak clearly.</p>
+                </div>
+                {% if job.vic %}
+                <div class="detail-item">
+                    <h4>Assessment Focus Areas</h4>
+                    <p>{{ job.vic }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="system-check">
+                <div class="check-item">
+                    <span class="check-label">Microphone Status</span>
+                    <span class="check-status status-pending" id="micStatusLabel">Not Configured</span>
+                </div>
+                <button class="btn btn-check-mic" id="btnCheckMic" onclick="requestMicPermission()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.25rem;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    Allow & Test Microphone
+                </button>
+                <div class="mic-vol-bar" id="micVolBar">
+                    <div class="mic-vol-fill" id="micVolFill"></div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 1rem;">
+                <button class="btn btn-primary" id="btnStartInterview" disabled onclick="startInterviewSession()">
+                    Start AI Voice Interview
+                </button>
+            </div>
+        </div>
+
+        <!-- State 2: Active Voice Interview Session -->
+        <div class="interview-state" id="interviewState">
+            <div class="status-indicator" id="interviewStatusText">Initializing call...</div>
+            <div class="status-subtext" id="interviewStatusSub">Setting up secure WebRTC connection</div>
+
+            <div class="assistant-avatar-container">
+                <div class="avatar-glow-1"></div>
+                <div class="avatar-glow-2"></div>
+                <div class="assistant-avatar" id="assistantAvatar">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="transcript-live-box" id="transcriptBox">
+                <div class="transcript-line" style="color: var(--text-muted); font-style: italic;">
+                    Press Start to begin speaking. The AI will introduce itself and guide you through the process.
+                </div>
+            </div>
+
+            <div class="controls-row">
+                <button class="btn btn-mute" id="btnMute" onclick="toggleMute()" disabled>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.25rem;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    Mute Mic
+                </button>
+                <button class="btn btn-end" id="btnEnd" onclick="showEndConfirm()">
+                    End Interview
+                </button>
+            </div>
+
+            <!-- Inline End Interview confirmation — no browser dialogs -->
+            <div class="end-confirm-overlay" id="endConfirmOverlay">
+                <div class="end-confirm-box">
+                    <h3>End Interview?</h3>
+                    <p>This will submit your session for final assessment.<br>You will <strong>not</strong> be able to reconnect.</p>
+                    <div class="end-confirm-actions">
+                        <button class="btn-cancel-end" id="btnCancelEnd" onclick="hideEndConfirm()">Cancel</button>
+                        <button class="btn-confirm-end" id="btnConfirmEnd" onclick="doEndInterview()">Yes, End Interview</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const inviteToken = "{{ invite_token }}";
+        const candidateId = parseInt("{{ candidate.id }}");
+        let room = null;
+        let localAudioTrack = null;
+        let isMuted = false;
+        let audioContext = null;
+        let analyser = null;
+        let microphoneStream = null;
+        let javascriptNode = null;
+
+        // Logging tab changes to interview_events
+        document.addEventListener('visibilitychange', () => {
+            if (room && room.state === 'connected') {
+                const event_type = document.hidden ? 'tab_hidden' : 'tab_visible';
+                fetch('/api/interviews/log-event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: inviteToken,
+                        event_type: event_type
+                    })
+                }).catch(e => console.error("Event log failed", e));
+            }
+        });
+
+        window.addEventListener('beforeunload', (event) => {
+            if (room && room.state === 'connected') {
+                event.preventDefault();
+                event.returnValue = 'Are you sure you want to exit the interview? Your progress will be saved but the call will disconnect.';
+                return event.returnValue;
+            }
+        });
+
+        async function requestMicPermission() {
+            const micStatusLabel = document.getElementById('micStatusLabel');
+            const btnStart = document.getElementById('btnStartInterview');
+            const micVolBar = document.getElementById('micVolBar');
+            const micVolFill = document.getElementById('micVolFill');
+
+            try {
+                microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                
+                micStatusLabel.textContent = "Ready";
+                micStatusLabel.className = "check-status status-success";
+                btnStart.removeAttribute('disabled');
+                micVolBar.style.display = 'block';
+
+                // Mic volume visualizer check
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaStreamSource(microphoneStream);
+                source.connect(analyser);
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+
+                function draw() {
+                    if (!microphoneStream) return;
+                    requestAnimationFrame(draw);
+                    analyser.getByteFrequencyData(dataArray);
+                    let sum = 0;
+                    for (let i = 0; i < bufferLength; i++) {
+                        sum += dataArray[i];
+                    }
+                    let average = sum / bufferLength;
+                    let percentage = Math.min(100, Math.round((average / 128) * 100));
+                    micVolFill.style.width = percentage + '%';
+                }
+                draw();
+
+            } catch (err) {
+                console.error("Microphone access failed:", err);
+                micStatusLabel.textContent = "Permission Denied";
+                micStatusLabel.className = "check-status status-error";
+                btnStart.setAttribute('disabled', 'true');
+                micVolBar.style.display = 'none';
+            }
+        }
+
+        async function startInterviewSession() {
+            // Stop checker
+            if (microphoneStream) {
+                microphoneStream.getTracks().forEach(track => track.stop());
+                microphoneStream = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+
+            // Transition UI State
+            document.getElementById('introState').style.display = 'none';
+            document.getElementById('interviewState').style.display = 'flex';
+
+            const statusText = document.getElementById('interviewStatusText');
+            const statusSub = document.getElementById('interviewStatusSub');
+            const transcriptBox = document.getElementById('transcriptBox');
+
+            try {
+                // Call API gateway to start room
+                statusText.textContent = "Creating room...";
+                statusSub.textContent = "Requesting secure WebRTC credentials";
+                
+                const response = await fetch('/api/interviews/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: inviteToken })
+                });
+
+                if (response.status === 409) {
+                    statusText.textContent = "Access Denied";
+                    statusSub.textContent = "This interview invitation has already been used.";
+                    transcriptBox.innerHTML = `<div class="transcript-line" style="color: var(--color-danger); text-align: center; font-weight: 600;">
+                        Conflict: Another session is currently ongoing or has completed with this token.
+                    </div>`;
+                    return;
+                } else if (response.status === 410) {
+                    statusText.textContent = "Expired";
+                    statusSub.textContent = "This interview invitation token has expired.";
+                    return;
+                } else if (!response.ok) {
+                    throw new Error("Start API returned: " + response.statusText);
+                }
+
+                const data = await response.json();
+                const roomUrl = data.livekit_url || "wss://interview-bot-i53ue1fj.livekit.cloud";
+                const token = data.token;
+
+                statusText.textContent = "Connecting to voice server...";
+                statusSub.textContent = "Establishing LiveKit WebRTC peer connection";
+
+                room = new LivekitClient.Room({
+                    adaptiveStream: true,
+                    dynacast: true,
+                });
+
+                // Set up event listeners
+                room.on(LivekitClient.RoomEvent.ParticipantConnected, p => {
+                    console.log('Participant joined:', p.identity);
+                    if (p.identity.includes('agent') || p.identity.includes('assistant')) {
+                        statusText.textContent = "AI Interviewer Connected";
+                        statusSub.textContent = "Live Audio Connection Active";
+                    }
+                });
+
+                room.on(LivekitClient.RoomEvent.ParticipantDisconnected, p => {
+                    console.log('Participant left:', p.identity);
+                    if (p.identity.includes('agent') || p.identity.includes('assistant')) {
+                        statusText.textContent = "AI Interviewer Disconnected";
+                        statusSub.textContent = "Waiting for agent to rejoin...";
+                    }
+                });
+
+                room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+                    if (track.kind === 'audio') {
+                        const element = track.attach();
+                        document.body.appendChild(element);
+                        
+                        // Set avatar state
+                        const avatar = document.getElementById('assistantAvatar');
+                        avatar.classList.add('speaking');
+                        statusText.textContent = "Interview in Progress";
+                        statusSub.textContent = "Speak clearly when replying to questions.";
+                    }
+                });
+
+                room.on(LivekitClient.RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
+                    track.detach();
+                    const avatar = document.getElementById('assistantAvatar');
+                    avatar.classList.remove('speaking');
+                });
+
+                room.on(LivekitClient.RoomEvent.Disconnected, () => {
+                    statusText.textContent = "Disconnected";
+                    statusSub.textContent = "The connection has been closed.";
+                    document.getElementById('btnMute').setAttribute('disabled', 'true');
+                });
+
+                // Connect!
+                await room.connect(roomUrl, token);
+                console.log("Room connection established:", room.name);
+                
+                // Enable local mic
+                await room.localParticipant.setMicrophoneEnabled(true);
+                document.getElementById('btnMute').removeAttribute('disabled');
+                
+                statusText.textContent = "Connected";
+                statusSub.textContent = "Waiting for AI Interviewer to join...";
+
+                // Append initial welcome log
+                transcriptBox.innerHTML = `<div class="transcript-line" style="color: var(--color-success); font-weight: 500;">
+                    ✓ Connection established successfully. Call active.
+                </div>`;
+
+            } catch (err) {
+                console.error("Start interview session failed:", err);
+                statusText.textContent = "Connection Failed";
+                statusSub.textContent = "Unable to connect to the voice assistant.";
+                transcriptBox.innerHTML = `<div class="transcript-line" style="color: var(--color-danger); text-align: center;">
+                    Error Details: ${err.message || 'Check network connection or try again.'}
+                </div>`;
+            }
+        }
+
+        async function toggleMute() {
+            if (!room) return;
+            isMuted = !isMuted;
+            await room.localParticipant.setMicrophoneEnabled(!isMuted);
+            const btn = document.getElementById('btnMute');
+            if (isMuted) {
+                btn.classList.add('muted');
+                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.25rem;"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Unmute Mic`;
+            } else {
+                btn.classList.remove('muted');
+                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.25rem;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Mute Mic`;
+            }
+        }
+
+        function showEndConfirm() {
+            document.getElementById('endConfirmOverlay').classList.add('visible');
+        }
+
+        function hideEndConfirm() {
+            document.getElementById('endConfirmOverlay').classList.remove('visible');
+        }
+
+        async function doEndInterview() {
+            const confirmBtn = document.getElementById('btnConfirmEnd');
+            const cancelBtn  = document.getElementById('btnCancelEnd');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Ending...';
+            cancelBtn.disabled = true;
+            hideEndConfirm();
+            await endInterviewSession();
+        }
+
+        async function endInterviewSession() {
+            const statusText = document.getElementById('interviewStatusText');
+            const statusSub  = document.getElementById('interviewStatusSub');
+
+            // Disconnect from LiveKit — wrapped so a crashed room can't block the API call
+            if (room) {
+                try { room.disconnect(); } catch (e) { console.warn("room.disconnect() threw:", e); }
+                room = null;
+            }
+
+            // Hide controls immediately so user can't click again
+            const controlsRow = document.querySelector('.controls-row');
+            if (controlsRow) controlsRow.style.display = 'none';
+
+            statusText.textContent = "Saving interview session...";
+            statusSub.textContent  = "Persisting transcripts and updating recruiter status";
+
+            try {
+                const res = await fetch(`/api/interviews/end-token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: inviteToken })
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    console.error("end-token API error:", res.status, errData.detail);
+                    // Still show completion to the candidate — the session IS over from their side
+                }
+
+                statusText.textContent = "Interview Completed";
+                statusSub.textContent  = "Thank you! Your interview has been submitted successfully.";
+                document.getElementById('transcriptBox').innerHTML = `<div class="transcript-line" style="color: var(--color-success); text-align: center; font-weight: 600; font-size: 1.1rem; padding: 2rem 0;">
+                    ✓ Submission Successful
+                    <p style="font-size: 0.9rem; font-weight: 400; color: var(--text-muted); margin-top: 0.5rem;">The hiring team has been notified. You may close this window.</p>
+                </div>`;
+            } catch (err) {
+                console.error("End session network error:", err);
+                statusText.textContent = "Interview Ended";
+                statusSub.textContent  = "Your session has been closed. You may close this window.";
+            }
+        }
+    </script>
+</body>
+</html>
