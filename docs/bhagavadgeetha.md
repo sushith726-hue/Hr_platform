@@ -741,3 +741,37 @@ Behavioral Assessment: {bc_summary or 'Not available'}
 
 Write a concise, professional 2-3 sentence hiring recommendation summary. Be direct and specific.
 ```
+
+---
+
+## 14. Graphify Integration Rules for Antigravity
+
+### 14.1 Context Hierarchy (Priority Order)
+1. **Graphify Knowledge Graph** (compressed, structured)
+2. **File Tree Summary** (filenames + sizes only)
+3. **Specific File Snippets** (only when user asks)
+4. **Full File Contents** (last resort, requires approval)
+
+### 14.2 Graphify Query Rules
+- ALWAYS query Graphify before reading raw files.
+- Query format: `"Find [entity] related to [user intent]"`
+- Max nodes to retrieve: 20 per query.
+- Max relationships to traverse: 3 hops.
+- Exclude: comments, docstrings, test files (unless asked).
+
+### 14.3 Token Budget
+- Graphify context: max 4000 tokens.
+- If exceeded: switch to file-tree-only mode.
+- Log every query: tokens saved vs baseline.
+
+### 14.4 Auto-Indexing
+- Trigger: file save, file create, file delete.
+- Debounce: 5 seconds.
+- Background: yes (non-blocking).
+- Scope: current workspace only.
+
+### 14.5 Fallback Rules
+- If Graphify is not installed: use current file-only context.
+- If Graphify query fails: use file-tree context.
+- If user says "show me the full file": bypass Graphify, show raw content.
+
