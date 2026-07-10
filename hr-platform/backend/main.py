@@ -310,7 +310,7 @@ def health_check(db: Session = Depends(get_db)):
         "redis": "disconnected"
     }
 
-    # 1. Check PostgreSQL connection
+    # 1. Check PostgreSQL connection status
     try:
         db.execute(text("SELECT 1"))
         health["postgres"] = "connected"
