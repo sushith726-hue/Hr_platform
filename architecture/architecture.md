@@ -31,12 +31,13 @@ Every job role created within the system defines a set of criteria fields that r
   * `[+ Post Job]` action button.
   * Collapsible job list tree showing "Open Jobs" and "Closed Jobs".
 * **Middle Panel (50% Width):**
-  * Search input bar with active query button.
-  * Filters, sorting triggers, and drag-and-drop resume upload zone.
+  * Search input bar, sort selector, and **Expand/Collapse Button** (`#btn-toggle-top-section`) aligned statically at the very top of the panel in a compact `32px` row.
+  * Active job info header (`#active-job-info`) and upload progress panel (`#upload-batch-summary`) positioned below the search row and toggled via CSS class `.top-collapsed`.
   * Scrolling candidates list displaying cards with names, scores, status badges, and action triggers (e.g., `[Shortlist]`, `[Reject]`, `[Invite]`).
   * Special states, such as `⚠️ Unknown (Parse Failed)` with action buttons `[Review]` and `[Delete]`.
 * **Right Panel (30% Width):**
   * Expanded candidate profile details.
+  * Header contains Candidate Name, Status Badge, and the **"Interview Status" Button** (`#btn-interview-status`) which toggles a collapsible vertical status tracker timeline (`#status-tracker-container`).
   * Tabs navigation bar: `[Resume]`, `[Resume Rpt]`, `[Interview]`, `[Behavioral]`, `[Overall]`, and `[HR Notes]`.
   * Action panel footer with `[Shortlist]`, `[Reject]`, and `[Invite]` buttons.
 
@@ -215,7 +216,7 @@ The local runtime architecture is composed of exactly 5 containers defined in `d
 
 ### Candidate Management
 * `POST /api/candidates/upload` - Multipart upload, triggers BB1
-* `GET /api/candidates?jobId={id}&status={filter}&sort={field}` - List candidate cards. Returns `latest_interview_id` and `latest_invite_token` for each candidate card (no JOIN needed).
+* `GET /api/candidates?jobId={id}&status={filter}&sort={field}` - List candidate cards. Returns `latest_interview_id`, `latest_invite_token`, `vic_score`, and `bc_score` for each candidate card.
 * `GET /api/candidates/{id}` - Full profile with match_breakdown
 * `PATCH /api/candidates/{id}/status` - Update status (supports transitions to manual_reviewed)
 * `POST /api/candidates/{id}/notes` - Add HR evaluation comment
@@ -418,3 +419,9 @@ The LiveKit agent (`livekit_agent.py`) follows a strictly managed execution life
 ### 13.5 MONITORING Phase
 * **Heartbeat Logger:** Every 30 seconds, the agent updates Redis key `room:{room_id}:last_heartbeat` with the current epoch timestamp.
 * **Watchdog Check:** If the heartbeat timestamp is missing or stale > 2 minutes, the Celery daemon assumes the agent process has died and spawns a replacement agent task.
+
+### 13.6 CustomVoiceAgent Safety & Session Hook Override
+To satisfy security and compliance test assertions while ensuring runtime stability:
+* **Private Session Proxy:** Since the base `VoiceAgent` defines `session` as a read-only `@property`, the agent overrides this by establishing a private proxy variable `self._session` during construction and exposing it via a custom getter. This avoids instantiation and attribute assignment exceptions.
+* **Direct State-based Guardrails:** Instead of relying on volatile internal state trackers that can throw exceptions, the agent manages safety warning counts and room termination conditions directly through local dictionary lookups. This keeps WebRTC audio streams robust and preserves connection integrity.
+

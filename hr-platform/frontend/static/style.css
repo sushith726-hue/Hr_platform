@@ -238,6 +238,24 @@ body {
     color: var(--text-main);
 }
 
+/* --- SVG Spinner Animation (used on file-icon and JD upload button) --- */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+.spin {
+    animation: spin 0.9s linear infinite;
+    display: inline-block;
+}
+.file-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+}
+
 /* --- Left Panel Job Trees --- */
 .job-list-container {
     flex: 1;
@@ -398,7 +416,9 @@ body {
 .candidates-list-container {
     flex: 1;
     overflow-y: auto;
+    scrollbar-gutter: stable;
     padding: 0 1.5rem 1.5rem;
+    min-height: 400px;
 }
 
 .no-candidates-msg {
@@ -499,6 +519,8 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .profile-header {
@@ -640,7 +662,8 @@ body {
 
 /* --- Tab Panels --- */
 .tabs-content {
-    flex: 1;
+    flex: 1 1 0%;
+    height: 0;
     overflow-y: auto;
     padding: 1.5rem;
 }
@@ -1118,6 +1141,7 @@ body.left-open .hamburger-bar:nth-child(3) { transform: translateY(-7px) rotate(
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    contain: layout style paint;
 }
 
 .candidate-card {
@@ -1128,7 +1152,8 @@ body.left-open .hamburger-bar:nth-child(3) { transform: translateY(-7px) rotate(
     border: 1px solid #e2e8f0 !important;
     border-radius: 8px !important;
     padding: 0.6rem 0.8rem !important;
-    height: 72px !important; /* max 100px (compact) */
+    min-height: 72px !important;
+    height: auto !important; /* max 100px (compact) */
     cursor: pointer;
     transition: all 0.15s ease-in-out;
     box-shadow: var(--shadow-soft) !important;
@@ -1289,12 +1314,13 @@ body.left-open .hamburger-bar:nth-child(3) { transform: translateY(-7px) rotate(
     transform: rotate(-90deg);
 }
 .accordion-content {
-    overflow: hidden;
-    transition: max-height 200ms ease-in-out;
-    max-height: 1000px;
+    overflow: visible;
+    transition: max-height 250ms ease-in-out;
+    max-height: 20000px;
 }
 .accordion-content.collapsed {
     max-height: 0 !important;
+    overflow: hidden;
 }
 .job-count-badge {
     background-color: #374151;
@@ -1320,6 +1346,39 @@ body.left-open .hamburger-bar:nth-child(3) { transform: translateY(-7px) rotate(
 }
 .left-panel-footer .btn {
     width: 100%;
+}
+
+/* --- Job Lazy-load sentinel & end-mark --- */
+.job-lazy-sentinel {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6rem 0;
+    height: 36px;
+}
+
+@keyframes job-spin {
+    to { transform: rotate(360deg); }
+}
+
+.job-lazy-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: job-spin 0.7s linear infinite;
+}
+
+.job-list-end-mark {
+    list-style: none;
+    font-size: 0.72rem;
+    color: var(--text-placeholder);
+    text-align: center;
+    padding: 0.5rem 0 0.25rem;
+    letter-spacing: 0.02em;
 }
 .job-item.active {
     background-color: #ffffff !important;
@@ -1389,7 +1448,7 @@ body.left-open .hamburger-bar:nth-child(3) { transform: translateY(-7px) rotate(
 }
 
 /* Inputs & Select Elements Overrides */
-.search-bar input, .filter-controls select, .form-group input, .form-group textarea, #notes-textarea {
+.search-bar input, .filter-controls select, .form-group select, .form-group input, .form-group textarea, #notes-textarea {
     background-color: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     color: #0f172a !important;
@@ -1400,10 +1459,10 @@ body.left-open .hamburger-bar:nth-child(3) { transform: translateY(-7px) rotate(
 .search-bar input::placeholder, .form-group input::placeholder, .form-group textarea::placeholder, #notes-textarea::placeholder {
     color: #94a3b8 !important;
 }
-.search-bar input:hover, .filter-controls select:hover, .form-group input:hover, .form-group textarea:hover, #notes-textarea:hover {
+.search-bar input:hover, .filter-controls select:hover, .form-group select:hover, .form-group input:hover, .form-group textarea:hover, #notes-textarea:hover {
     border-color: #cbd5e1 !important;
 }
-.search-bar input:focus, .filter-controls select:focus, .form-group input:focus, .form-group textarea:focus, #notes-textarea:focus {
+.search-bar input:focus, .filter-controls select:focus, .form-group select:focus, .form-group input:focus, .form-group textarea:focus, #notes-textarea:focus {
     border-color: #3b82f6 !important;
     outline: none !important;
     box-shadow: 0 0 0 2px rgba(59,130,246,0.1) !important;
@@ -1618,7 +1677,7 @@ body.left-open .hamburger-bar:nth-child(3) { transform: translateY(-7px) rotate(
 
 /* Upload Batch inline panel */
 .upload-batch-summary {
-    transition: all 0.3s ease;
+    transition: opacity 0.15s ease;
 }
 .batch-details-inline {
     margin-top: 8px;
@@ -1769,7 +1828,7 @@ body.left-open .hamburger-bar:nth-child(3) { transform: translateY(-7px) rotate(
 
 .candidate-card-actions {
     position: absolute;
-    right: 48px;
+    right: 8px;
     top: 50%;
     transform: translateY(-50%);
     z-index: 10;
@@ -1961,5 +2020,128 @@ body.left-open .hamburger-bar:nth-child(3) { transform: translateY(-7px) rotate(
     width: 85%;
     height: 12px;
 }
+
+/* --- Interview Status Tracker (Shopping-app order tracking style) --- */
+.status-tracker {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    position: relative;
+    padding-left: 0.5rem;
+}
+
+.status-tracker-step {
+    display: flex;
+    gap: 1rem;
+    position: relative;
+}
+
+/* Connective vertical line */
+.status-tracker-step:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 11px;
+    top: 24px;
+    bottom: -20px;
+    width: 2px;
+    background-color: var(--border-color);
+    z-index: 1;
+}
+
+.status-tracker-step.completed:not(:last-child)::after {
+    background-color: var(--color-success);
+}
+
+.status-tracker-node {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--bg-panel);
+    border: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.status-tracker-step.completed .status-tracker-node {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+    color: #ffffff;
+}
+
+.status-tracker-step.ongoing .status-tracker-node {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+    animation: pulse-node 2s infinite;
+}
+
+.status-tracker-step.no-show .status-tracker-node {
+    background-color: var(--color-warning);
+    border-color: var(--color-warning);
+    color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.15);
+}
+
+.status-tracker-step.failed .status-tracker-node {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+    color: #ffffff;
+}
+
+.status-tracker-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-top: 2px;
+}
+
+.status-tracker-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.status-tracker-step.completed .status-tracker-title {
+    color: var(--color-success);
+}
+
+.status-tracker-step.ongoing .status-tracker-title {
+    color: var(--color-primary);
+}
+
+.status-tracker-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.35;
+}
+
+@keyframes pulse-node {
+    0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+
+/* --- Expand/Collapse Middle Panel Top Section --- */
+#middle-panel.top-collapsed #active-job-info {
+    display: none !important;
+}
+#middle-panel.top-collapsed #upload-batch-summary {
+    display: none !important;
+}
+#middle-panel.top-collapsed #icon-toggle-top {
+    transform: rotate(180deg);
+}
+
 
 

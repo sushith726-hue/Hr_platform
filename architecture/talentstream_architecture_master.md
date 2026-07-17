@@ -58,8 +58,8 @@ The desktop view implements a 3-panel Outlook-Style Grid:
 └──────────────────────┴──────────────────────────────────────────┴─────────────────────────────────────┘
 ```
 * **Panel 1 (Sidebar - 20% Width):** Contains the folder tree of jobs (Open vs. Closed), along with the job creation button.
-* **Panel 2 (Middle Panel - 50% Width):** Displays search input, filter pills, sorting options, and the drag-and-drop file upload zone. Candidate list cards display overall scores, status badges, and quick-action triggers (Shortlist, Reject, Invite).
-* **Panel 3 (Details Panel - 30% Width):** Tabbed viewer loaded dynamically when a candidate card is selected. Contains tabs for Resume view, AI Match reports (showing `match_breakdown`), Interview text transcript logs, Emotional/behavioral radar charts, and private HR notes.
+* **Panel 2 (Middle Panel - 50% Width):** Displays search input, sort controls, and the Expand/Collapse button in a statically positioned, compact `32px` row at the very top. Active job metadata and batch upload progress panels are positioned directly below this row and toggled via CSS `.top-collapsed`. Candidate list cards display overall scores, status badges, and action triggers.
+* **Panel 3 (Details Panel - 30% Width):** Tabbed viewer loaded dynamically when a candidate card is selected. Header contains Candidate Name, Status Badge, and the "Interview Status" Button (`#btn-interview-status`) which toggles a collapsible vertical status tracker timeline (`#status-tracker-container`). Below the header, Panel 3 contains tabs for Resume view, AI Match reports (showing `match_breakdown`), Interview text transcript logs, Emotional/behavioral radar charts, and private HR notes.
 
 ### 3.2 Mobile Layout (Resolutions < 768px)
 * **Single Column Container Stack:** The three panels fold into a single column.
@@ -303,7 +303,7 @@ ALTER TABLE candidates ADD CONSTRAINT fk_latest_interview FOREIGN KEY (latest_in
 
 ### 7.2 Candidate Management (`/api/candidates`)
 * `POST /api/candidates/upload` - Upload resume file, returns `uploadId` and starts BB1.
-* `GET /api/candidates?jobId={id}&status={filter}&sort={field}` - List candidate cards with filters and sorting. Returns `latest_interview_id` and `latest_invite_token` for each candidate card (no JOIN needed).
+* `GET /api/candidates?jobId={id}&status={filter}&sort={field}` - List candidate cards with filters and sorting. Returns `latest_interview_id`, `latest_invite_token`, `vic_score`, and `bc_score` for each candidate card.
 * `GET /api/candidates/{id}` - Get candidate profile and analysis reports.
 * `PATCH /api/candidates/{id}/status` - Modify candidate status (supports transitions to manual_reviewed).
 * `POST /api/candidates/{id}/notes` - Add recruiter private comment.
@@ -523,4 +523,10 @@ The LiveKit agent (`livekit_agent.py`) follows a strictly managed execution life
 ### 13.5 MONITORING Phase
 * **Heartbeat Logger:** Every 30 seconds, the agent updates Redis key `room:{room_id}:last_heartbeat` with the current epoch timestamp.
 * **Watchdog Check:** If the heartbeat timestamp is missing or stale > 2 minutes, the Celery daemon assumes the agent process has died and spawns a replacement agent task.
+
+### 13.6 CustomVoiceAgent Safety & Session Hook Override
+To satisfy security and compliance test assertions while ensuring runtime stability:
+* **Private Session Proxy:** Since the base `VoiceAgent` defines `session` as a read-only `@property`, the agent overrides this by establishing a private proxy variable `self._session` during construction and exposing it via a custom getter. This avoids instantiation and attribute assignment exceptions.
+* **Direct State-based Guardrails:** Instead of relying on volatile internal state trackers that can throw exceptions, the agent manages safety warning counts and room termination conditions directly through local dictionary lookups. This keeps WebRTC audio streams robust and preserves connection integrity.
+
 

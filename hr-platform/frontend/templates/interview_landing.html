@@ -478,6 +478,19 @@
             <p class="subtitle">AI Voice Assessment Portal</p>
         </div>
 
+        {% if error_title %}
+        <!-- Expired / Error State -->
+        <div class="error-state" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1.5rem; animation: fadeIn 0.4s ease-out;">
+            <div style="background: rgba(239, 68, 68, 0.1); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--color-danger); margin-bottom: 0.5rem; border: 1px solid rgba(239, 68, 68, 0.2);">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <h2 style="font-size: 1.8rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ error_title }}</h2>
+            <p style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; max-width: 500px; margin: 0 auto;">{{ error_message }}</p>
+            <div style="margin-top: 1rem;">
+                <span style="font-size: 0.75rem; color: var(--text-muted); padding: 0.5rem 1rem; background: rgba(255, 255, 255, 0.03); border-radius: 6px; border: 1px solid var(--border-color);">Invitation Token: {{ invite_token }}</span>
+            </div>
+        </div>
+        {% else %}
         <!-- State 1: Preparation / Intro -->
         <div class="intro-state" id="introState">
             <div class="welcome-box">
@@ -522,6 +535,7 @@
                 </button>
             </div>
         </div>
+        {% endif %}
 
         <!-- State 2: Active Voice Interview Session -->
         <div class="interview-state" id="interviewState">
@@ -579,10 +593,15 @@
         let microphoneStream = null;
         let javascriptNode = null;
 
-        // Logging tab changes to interview_events
+        // Logging tab changes to interview_events & WebRTC Data Channel
+        let tabHiddenTime = null;
+        let tabSwitchCount = 0;
+
         document.addEventListener('visibilitychange', () => {
             if (room && room.state === 'connected') {
                 const event_type = document.hidden ? 'tab_hidden' : 'tab_visible';
+                
+                // REST API fallback
                 fetch('/api/interviews/log-event', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -591,6 +610,31 @@
                         event_type: event_type
                     })
                 }).catch(e => console.error("Event log failed", e));
+
+                // WebRTC Data Channel
+                try {
+                    const encoder = new TextEncoder();
+                    if (document.hidden) {
+                        tabHiddenTime = Date.now();
+                        tabSwitchCount++;
+                        const data = encoder.encode(JSON.stringify({
+                            type: 'tab_focus_lost',
+                            switch_count: tabSwitchCount
+                        }));
+                        room.localParticipant.publishData(data, { reliable: true });
+                    } else {
+                        const duration_ms = tabHiddenTime ? (Date.now() - tabHiddenTime) : 0;
+                        tabHiddenTime = null;
+                        const data = encoder.encode(JSON.stringify({
+                            type: 'tab_focus_restored',
+                            duration_ms: duration_ms,
+                            switch_count: tabSwitchCount
+                        }));
+                        room.localParticipant.publishData(data, { reliable: true });
+                    }
+                } catch (e) {
+                    console.error("WebRTC data channel publish failed", e);
+                }
             }
         });
 

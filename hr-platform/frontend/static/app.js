@@ -3,7 +3,15 @@
    ============================================================================= */
 
 let currentJobId = null;
-let jobs = [];
+let isDeleteDropdownOpen = false; // FIX 1: Guard SSE surgical updates when delete confirmation is open
+let jobs = []; // All locally loaded jobs (union of open + closed pages)
+
+// Lazy-load state for Open and Closed sections
+const jobLazyState = {
+    open:   { offset: 0, limit: 10, total: 0, loading: false, done: false },
+    closed: { offset: 0, limit: 10, total: 0, loading: false, done: false },
+};
+let jobLazyObservers = {};  // IntersectionObserver refs keyed by 'open' | 'closed'
 let currentFilter = "";
 let currentSearch = "";
 let currentSort = "newest";
@@ -15,19 +23,23 @@ let currentLimit = 20;
 let showAllEnabled = false;
 let selectedStatuses = [];
 let activeBatchSSE = null;
+let loadCandidatesAbortController = null;
 let activeBatchId = null;
+let _batchSSECandidateReloadTimer = null; // throttle guard for SSE-driven reload
 // Session-scoped batch history (JS memory only, max 5 recent batches)
 window.uploadBatches = [];
 let sessionBatches = window.uploadBatches;
 let batchCounter = 0;
 let olderBatches = [];
 let olderBatchesLoaded = false;
+let isStatusTrackerExpanded = false;
 
 document.addEventListener("DOMContentLoaded", () => {
     initTabs();
     initUploadZone();
     initJobModal();
     initUploadModal();
+    initResumeModal();
     initResizing();
     loadJobs();
     initFilters();
@@ -35,6 +47,9 @@ document.addEventListener("DOMContentLoaded", () => {
     initMobileNav();
     initAccordion();
     initPaginationControls();
+    initJobDeleteDelegation();
+    initCandidateListDelegation();
+    initDeleteCandidateModal();
     document.addEventListener("click", (e) => {
         // Don't close the menu if the click originated inside a card actions area
         if (e.target.closest(".candidate-card-actions")) return;
@@ -325,7 +340,9 @@ async function handleFiles(files) {
             fileCard.innerHTML = `
                 <div class="file-card-top">
                     <div class="file-info">
-                        <span class="file-icon">⏳</span>
+                        <span class="file-icon" aria-hidden="true">
+                            <svg class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#94a3b8" stroke-width="2"/><path d="M12 2a10 10 0 0110 10" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/></svg>
+                        </span>
                         <span class="file-name-text" title="${file.name}">${file.name}</span>
                     </div>
                     <span class="file-status-label processing">Queuing...</span>
@@ -439,11 +456,11 @@ async function uploadFile(file, batchId) {
         if (!fileCard) return;
         const iconEl = fileCard.querySelector(".file-icon");
         const label  = fileCard.querySelector(".file-status-label");
-        if (iconEl) iconEl.textContent = icon;
+        if (iconEl) iconEl.innerHTML = icon;
         if (label)  { label.className = `file-status-label ${cls || ""}`; label.textContent = text; }
     }
 
-    setCardStatus("📤", "Uploading...", "");
+    setCardStatus(`<svg class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#94a3b8" stroke-width="2"/><path d="M12 2a10 10 0 0110 10" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/></svg>`, "Uploading...", "");
 
     const MAX_RETRIES = 3;
     let lastErr = null;
@@ -452,7 +469,7 @@ async function uploadFile(file, batchId) {
         try {
             if (attempt > 1) {
                 const wait = attempt * 2000; // 2s, 4s back-off
-                setCardStatus("🔄", `Retry ${attempt}/${MAX_RETRIES}...`, "");
+                setCardStatus(`<svg class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#94a3b8" stroke-width="2"/><path d="M12 2a10 10 0 0110 10" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/></svg>`, `Retry ${attempt}/${MAX_RETRIES}...`, "");
                 await new Promise(r => setTimeout(r, wait));
             }
 
@@ -467,6 +484,27 @@ async function uploadFile(file, batchId) {
                 body: formData
             });
 
+            // 409 = duplicate — skip retries, show immediately
+            if (response.status === 409) {
+                let detail = "Duplicate resume — already uploaded for this job.";
+                try { const j = await response.json(); detail = j.detail || detail; } catch (_) {}
+                setCardStatus(
+                    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#f59e0b"/><path d="M12 8v4M12 16h.01" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>`,
+                    "Duplicate — skipped",
+                    "warning"
+                );
+                console.warn(`[Upload] ${file.name} skipped (duplicate):`, detail);
+                // Log non-critical failure to batch tracker
+                if (batchId) {
+                    fetch(`/api/uploads/batches/${batchId}/log-failure`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ file_name: file.name, file_size: file.size, error_message: detail })
+                    }).catch(() => {});
+                }
+                return; // non-retriable — exit loop
+            }
+
             if (!response.ok) {
                 let detail = `HTTP ${response.status}`;
                 try { const j = await response.json(); detail = j.detail || detail; } catch (_) {}
@@ -475,7 +513,9 @@ async function uploadFile(file, batchId) {
 
             const result = await response.json();
             console.log(`[Upload] ${file.name} OK (attempt ${attempt}):`, result);
-            setCardStatus("✅", "Uploaded", "success");
+            setCardStatus(`<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#22c55e"/><path d="M7 12l3.5 3.5L17 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`, "Uploaded", "success");
+            // NOTE: Do NOT call loadCandidates here per-file.
+            // The SSE batch completion (subscribeToBatchSSE -> throttled reload) handles refresh.
             return; // success — exit
 
         } catch (err) {
@@ -486,7 +526,7 @@ async function uploadFile(file, batchId) {
 
     // All retries exhausted
     console.error(`[Upload] ${file.name} permanently failed after ${MAX_RETRIES} attempts:`, lastErr?.message);
-    setCardStatus("❌", `Failed: ${lastErr?.message || "unknown error"}`, "failed");
+    setCardStatus(`<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#ef4444"/><path d="M8 8l8 8M16 8l-8 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>`, `Failed: ${lastErr?.message || "unknown error"}`, "failed");
 
     if (batchId) {
         fetch(`/api/uploads/batches/${batchId}/log-failure`, {
@@ -501,10 +541,19 @@ async function uploadFile(file, batchId) {
     }
 }
 
-async function loadCandidates(jobId) {
+
+async function loadCandidates(jobId, showSkeleton = true) {
     if (!jobId) return;
+    
+    // Abort any existing in-flight candidate fetch
+    if (loadCandidatesAbortController) {
+        loadCandidatesAbortController.abort();
+    }
+    loadCandidatesAbortController = new AbortController();
+    const { signal } = loadCandidatesAbortController;
+
     const listContainer = document.getElementById("candidates-list");
-    if (listContainer) {
+    if (showSkeleton && listContainer) {
         listContainer.innerHTML = `
             <div class="skeleton-loader">
                 <div class="skeleton-card">
@@ -525,6 +574,7 @@ async function loadCandidates(jobId) {
             </div>
         `;
     }
+    
     try {
         const activeJob = jobs.find(j => Number(j.id) === Number(jobId));
         const isClosedJob = activeJob && activeJob.status === "closed";
@@ -560,14 +610,21 @@ async function loadCandidates(jobId) {
             url += `&q=${encodeURIComponent(searchParam)}`;
         }
         
-        const response = await fetch(url);
+        const response = await fetch(url, { signal });
         if (!response.ok) {
             throw new Error(`Failed to fetch candidates: ${response.statusText}`);
         }
         const data = await response.json();
+        
+        // Ensure we only process if this fetch was not aborted
+        if (signal.aborted) return;
+
         if (data && data.candidates) {
             candidates = data.candidates;
             pagination = data.pagination;
+            if (pagination && pagination.page) {
+                currentPage = pagination.page;
+            }
             if (isClosedJob) {
                 candidates = candidates.filter(c => c.status === "hired" || c.status === "rejected_post_interview");
             }
@@ -590,7 +647,19 @@ async function loadCandidates(jobId) {
         }
         renderCandidates();
         renderPaginationUI();
+        
+        // Reset scroll position to top on page transition (when skeleton was shown)
+        if (showSkeleton && listContainer) {
+            const scrollContainer = listContainer.closest(".candidates-list-container");
+            if (scrollContainer) {
+                scrollContainer.scrollTop = 0;
+            }
+        }
     } catch (e) {
+        if (e.name === 'AbortError') {
+            console.log("Fetch aborted for page load");
+            return;
+        }
         console.error("Failed to load candidates:", e);
         if (listContainer) {
             listContainer.innerHTML = `
@@ -612,7 +681,10 @@ async function loadCandidates(jobId) {
 function renderCandidates() {
     const listContainer = document.getElementById("candidates-list");
     if (!listContainer) return;
-    
+
+    // Preserve scroll position so the list doesn't jump on refresh
+    const scrollContainer = listContainer.closest(".candidates-list-container");
+    const savedScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
     const activeJob = jobs.find(j => Number(j.id) === Number(currentJobId));
     const isClosedJob = activeJob && activeJob.status === "closed";
     
@@ -635,6 +707,121 @@ function renderCandidates() {
     
     const actionsStyle = isClosedJob ? 'style="display:none;"' : '';
     
+    // Check if the container currently has cards, and if their IDs match the list of displayCandidates.
+    // If they do, we can surgically update each card's content instead of wiping and recreating the DOM.
+    const existingCardNodes = listContainer.querySelectorAll(".candidate-card");
+    const canSurgicallyUpdate = existingCardNodes.length === displayCandidates.length && 
+        Array.from(existingCardNodes).every((node, idx) => Number(node.dataset.id) === Number(displayCandidates[idx].id));
+
+    if (canSurgicallyUpdate) {
+        displayCandidates.forEach((cand, idx) => {
+            const card = existingCardNodes[idx];
+            
+            // Check active state
+            const isActive = selectedCandidate && selectedCandidate.id === cand.id;
+            let cardClass = "candidate-card";
+            if (cand.status === "failed") {
+                cardClass += " failed-card";
+            } else if (cand.status === "unable_to_process") {
+                cardClass += " unable-to-process-card";
+            }
+            if (isActive) {
+                cardClass += " active";
+            }
+            
+            if (card.className !== cardClass) {
+                card.className = cardClass;
+            }
+            
+            let displayScoreValue = cand.overall_score !== null && cand.overall_score !== undefined ? cand.overall_score : cand.match_score;
+            let scoreClass = getScoreGroupClass(displayScoreValue);
+            let displayScore = displayScoreValue !== null && displayScoreValue !== undefined ? displayScoreValue : '-';
+            const initials = getInitials(cand.name);
+            
+            let statusIndicator = `<span class="status-dot status-dot-${cand.status === 'new' ? 'scored' : cand.status}"></span>`;
+            if (cand.status === "failed" || cand.status === "unable_to_process" || cand.status === "manual_review") {
+                statusIndicator = `<span class="badge" style="font-size: 0.65rem; padding: 2px 6px; background-color: #ef4444; color: #ffffff; border-radius: 4px; font-weight: 600;">Review Needed</span>`;
+                // Do NOT override displayScore — use actual score or '–' if null
+                if (displayScore === '-') scoreClass = 'score-badge-red';
+            } else if (cand.status === "manual_reviewed") {
+                statusIndicator = `<span class="badge" style="font-size: 0.65rem; padding: 2px 6px; background-color: #3b82f6; color: #ffffff; border-radius: 4px; font-weight: 600;">Manual Reviewed</span>`;
+                // Do NOT override displayScore — use actual score or '–' if null
+            } else if (isClosedJob) {
+                const badgeInfo = getStatusLabelAndClass(cand.status);
+                statusIndicator = `<span class="badge ${badgeInfo.className}" style="font-size: 0.65rem; padding: 2px 6px;">${badgeInfo.label}</span>`;
+            }
+            
+            let displayName = cand.name;
+            if (!displayName) {
+                if (cand.status === "unable_to_process" || cand.status === "failed") {
+                    displayName = "Failed to Process";
+                } else {
+                    displayName = "Parsing...";
+                }
+            }
+            
+            const newHTML = `
+                <div class="candidate-avatar">${initials}</div>
+                <div class="candidate-card-middle">
+                    <div class="candidate-card-title-row" style="${isClosedJob ? 'align-items: center; gap: 8px;' : ''}">
+                        ${statusIndicator}
+                        <h4>${displayName}</h4>
+                    </div>
+                    <div class="candidate-card-subtitle">${cand.email || '-'}</div>
+                    ${(cand.status === "failed" || cand.status === "unable_to_process") ? '' : `
+                    <div class="candidate-card-scores-row" style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.72rem; display: flex; align-items: center; gap: 4px; line-height: 1.2;">
+                            <span style="color: var(--text-muted); font-weight: 500;">CV:</span>
+                            <strong style="color: var(--text-main); font-weight: 600;">${cand.match_score !== null && cand.match_score !== undefined ? cand.match_score : '–'}</strong>
+                        </div>
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.72rem; display: flex; align-items: center; gap: 4px; line-height: 1.2;">
+                            <span style="color: var(--text-muted); font-weight: 500;">INT:</span>
+                            <strong style="color: var(--text-main); font-weight: 600;">${cand.vic_score !== null && cand.vic_score !== undefined ? cand.vic_score : '–'}</strong>
+                        </div>
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.72rem; display: flex; align-items: center; gap: 4px; line-height: 1.2;">
+                            <span style="color: var(--text-muted); font-weight: 500;">BEH:</span>
+                            <strong style="color: var(--text-main); font-weight: 600;">${cand.bc_score !== null && cand.bc_score !== undefined ? cand.bc_score : '–'}</strong>
+                        </div>
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.72rem; display: flex; align-items: center; gap: 4px; line-height: 1.2;">
+                            <span style="color: var(--text-muted); font-weight: 500;">OVR:</span>
+                            <strong style="color: var(--text-main); font-weight: 600;">${cand.overall_score !== null && cand.overall_score !== undefined ? cand.overall_score : '–'}</strong>
+                        </div>
+                    </div>
+                    `}
+                </div>
+                <div class="candidate-card-actions" id="card-actions-${cand.id}" ${actionsStyle}>
+                    <button class="btn-card-menu" aria-label="Candidate options" id="btn-menu-${cand.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></button>
+                    <div class="card-menu-dropdown" id="dropdown-${cand.id}" style="display: none;">
+                        <button class="menu-item-delete" id="delete-${cand.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; display: inline-block; vertical-align: middle;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>Delete</button>
+                    </div>
+                </div>
+                <div class="candidate-card-right-container" style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 4px; margin-left: auto; padding-right: 28px; flex-shrink: 0;">
+                    <div class="candidate-card-time" style="font-size: 0.72rem; color: var(--text-muted); font-weight: 500; white-space: nowrap;">
+                        ${formatRelativeTime(cand.created_at)}
+                    </div>
+                    ${(cand.status === "failed" || cand.status === "unable_to_process") ? `
+                        <button class="btn btn-secondary btn-view-resume" style="padding: 2px 6px; font-size: 0.65rem; height: 22px; min-height: 22px; border-radius: 4px; font-weight: 600; cursor: pointer; white-space: nowrap;">View Resume</button>
+                    ` : ''}
+                </div>
+            `;
+            
+            // Only update innerHTML if it has changed to prevent unneeded layout/paint cycles
+            // FIX 1: Skip update if delete dropdown is open — prevents destroying Yes/No confirmation
+            const cardDropdown = card.querySelector(".card-menu-dropdown");
+            const dropdownIsOpen = cardDropdown && cardDropdown.style.display !== "none";
+            if (!isDeleteDropdownOpen && !dropdownIsOpen && card.innerHTML.trim() !== newHTML.trim()) {
+                card.innerHTML = newHTML;
+            }
+        });
+        
+        // Restore scroll position
+        if (scrollContainer) {
+            scrollContainer.scrollTop = savedScrollTop;
+        }
+        return;
+    }
+
+    // Full clear and rebuild if surgical update is not possible
     listContainer.innerHTML = "";
     displayCandidates.forEach(cand => {
         const card = document.createElement("div");
@@ -647,19 +834,19 @@ function renderCandidates() {
         card.className = `candidate-card ${cardClass} ${selectedCandidate && selectedCandidate.id === cand.id ? 'active' : ''}`;
         card.dataset.id = cand.id;
         
-        let scoreClass = getScoreGroupClass(cand.match_score);
-        let displayScore = cand.match_score !== null ? cand.match_score : '-';
+        let displayScoreValue = cand.overall_score !== null && cand.overall_score !== undefined ? cand.overall_score : cand.match_score;
+        let scoreClass = getScoreGroupClass(displayScoreValue);
+        let displayScore = displayScoreValue !== null && displayScoreValue !== undefined ? displayScoreValue : '-';
         const initials = getInitials(cand.name);
         
-        let statusIndicator = `<span class="status-dot status-dot-${cand.status}"></span>`;
-        if (cand.status === "failed" || cand.status === "unable_to_process") {
+        let statusIndicator = `<span class="status-dot status-dot-${cand.status === 'new' ? 'scored' : cand.status}"></span>`;
+        if (cand.status === "failed" || cand.status === "unable_to_process" || cand.status === "manual_review") {
             statusIndicator = `<span class="badge" style="font-size: 0.65rem; padding: 2px 6px; background-color: #ef4444; color: #ffffff; border-radius: 4px; font-weight: 600;">Review Needed</span>`;
-            displayScore = '0';
-            scoreClass = 'score-badge-red';
+            // Do NOT override displayScore — use actual score or '–' if null
+            if (displayScore === '-') scoreClass = 'score-badge-red';
         } else if (cand.status === "manual_reviewed") {
             statusIndicator = `<span class="badge" style="font-size: 0.65rem; padding: 2px 6px; background-color: #3b82f6; color: #ffffff; border-radius: 4px; font-weight: 600;">Manual Reviewed</span>`;
-            displayScore = '0';
-            scoreClass = 'score-badge-red';
+            // Do NOT override displayScore — use actual score or '–' if null
         } else if (isClosedJob) {
             const badgeInfo = getStatusLabelAndClass(cand.status);
             statusIndicator = `<span class="badge ${badgeInfo.className}" style="font-size: 0.65rem; padding: 2px 6px;">${badgeInfo.label}</span>`;
@@ -682,118 +869,220 @@ function renderCandidates() {
                     <h4>${displayName}</h4>
                 </div>
                 <div class="candidate-card-subtitle">${cand.email || '-'}</div>
+                ${(cand.status === "failed" || cand.status === "unable_to_process") ? '' : `
+                <div class="candidate-card-scores-row" style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.72rem; display: flex; align-items: center; gap: 4px; line-height: 1.2;">
+                        <span style="color: var(--text-muted); font-weight: 500;">CV:</span>
+                        <strong style="color: var(--text-main); font-weight: 600;">${cand.match_score !== null && cand.match_score !== undefined ? cand.match_score : '–'}</strong>
+                    </div>
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.72rem; display: flex; align-items: center; gap: 4px; line-height: 1.2;">
+                        <span style="color: var(--text-muted); font-weight: 500;">INT:</span>
+                        <strong style="color: var(--text-main); font-weight: 600;">${cand.vic_score !== null && cand.vic_score !== undefined ? cand.vic_score : '–'}</strong>
+                    </div>
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.72rem; display: flex; align-items: center; gap: 4px; line-height: 1.2;">
+                        <span style="color: var(--text-muted); font-weight: 500;">BEH:</span>
+                        <strong style="color: var(--text-main); font-weight: 600;">${cand.bc_score !== null && cand.bc_score !== undefined ? cand.bc_score : '–'}</strong>
+                    </div>
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.72rem; display: flex; align-items: center; gap: 4px; line-height: 1.2;">
+                        <span style="color: var(--text-muted); font-weight: 500;">OVR:</span>
+                        <strong style="color: var(--text-main); font-weight: 600;">${cand.overall_score !== null && cand.overall_score !== undefined ? cand.overall_score : '–'}</strong>
+                    </div>
+                </div>
+                `}
             </div>
             <div class="candidate-card-actions" id="card-actions-${cand.id}" ${actionsStyle}>
-                <button class="btn-card-menu" aria-label="Candidate options" id="btn-menu-${cand.id}">&#8942;</button>
+                <button class="btn-card-menu" aria-label="Candidate options" id="btn-menu-${cand.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></button>
                 <div class="card-menu-dropdown" id="dropdown-${cand.id}" style="display: none;">
-                    <button class="menu-item-delete" id="delete-${cand.id}">&#128465; Delete</button>
+                    <button class="menu-item-delete" id="delete-${cand.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; display: inline-block; vertical-align: middle;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>Delete</button>
                 </div>
             </div>
-            ${(cand.status === "failed" || cand.status === "unable_to_process") ? `
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <button class="btn btn-secondary btn-view-resume" style="padding: 4px 8px; font-size: 0.7rem; height: 24px; min-height: 24px; border-radius: 4px; font-weight: 600; cursor: pointer; white-space: nowrap;">View Resume</button>
-                    <div class="candidate-card-score-circle score-badge-red" style="margin-left: 0;">0</div>
+            <div class="candidate-card-right-container" style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 4px; margin-left: auto; padding-right: 28px; flex-shrink: 0;">
+                <div class="candidate-card-time" style="font-size: 0.72rem; color: var(--text-muted); font-weight: 500; white-space: nowrap;">
+                    ${formatRelativeTime(cand.created_at)}
                 </div>
-            ` : `
-                <div class="candidate-card-score-circle ${scoreClass}">
-                    ${displayScore}
-                </div>
-            `}
+                ${(cand.status === "failed" || cand.status === "unable_to_process") ? `
+                    <button class="btn btn-secondary btn-view-resume" style="padding: 2px 6px; font-size: 0.65rem; height: 22px; min-height: 22px; border-radius: 4px; font-weight: 600; cursor: pointer; white-space: nowrap;">View Resume</button>
+                ` : ''}
+            </div>
         `;
+        listContainer.appendChild(card);
+    });
 
-        const menuBtn   = card.querySelector(`#btn-menu-${cand.id}`);
-        const dropdown  = card.querySelector(`#dropdown-${cand.id}`);
-        const deleteBtn = card.querySelector(`#delete-${cand.id}`);
+    // Restore scroll position
+    if (scrollContainer) {
+        scrollContainer.scrollTop = savedScrollTop;
+    }
+}
 
-        if (menuBtn && dropdown && deleteBtn) {
-            menuBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                e.preventDefault();
+function initCandidateListDelegation() {
+    const listContainer = document.getElementById("candidates-list");
+    if (!listContainer) return;
+
+    listContainer.addEventListener("click", async (e) => {
+        // Find if click is within a candidate card
+        const card = e.target.closest(".candidate-card");
+        if (!card) return;
+
+        const candId = Number(card.dataset.id);
+
+        // 1. Menu button click
+        const menuBtn = e.target.closest(".btn-card-menu");
+        if (menuBtn) {
+            e.stopPropagation();
+            e.preventDefault();
+            const dropdown = document.getElementById(`dropdown-${candId}`);
+            if (dropdown) {
                 // Close all other open menus first
                 document.querySelectorAll(".card-menu-dropdown").forEach(d => {
                     if (d !== dropdown) d.style.display = "none";
                 });
                 dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
-            });
-
-            deleteBtn.addEventListener("click", async (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-
-                // Inline confirmation: replace button with Yes / Cancel
-                dropdown.innerHTML = `
-                    <div style="padding: 8px 10px; font-size: 0.8rem; color: var(--text-main); white-space: nowrap;">
-                        Delete <b>${(cand.name || 'candidate').split(' ')[0]}</b>?
-                    </div>
-                    <div style="display:flex; gap:6px; padding: 2px 10px 8px;">
-                        <button id="confirm-yes-${cand.id}" style="flex:1; background:var(--color-danger); color:#fff; border:none; border-radius:4px; padding:5px 0; font-size:0.8rem; cursor:pointer;">Yes</button>
-                        <button id="confirm-no-${cand.id}"  style="flex:1; background:var(--bg-sidebar); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px; padding:5px 0; font-size:0.8rem; cursor:pointer;">Cancel</button>
-                    </div>
-                `;
-                dropdown.style.display = "block";
-
-                const yesBtn = document.getElementById(`confirm-yes-${cand.id}`);
-                const noBtn  = document.getElementById(`confirm-no-${cand.id}`);
-
-                noBtn.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    dropdown.style.display = "none";
-                });
-
-                yesBtn.addEventListener("click", async (e) => {
-                    e.stopPropagation();
-                    dropdown.style.display = "none";
-                    yesBtn.disabled = true;
-                    yesBtn.textContent = "…";
-
-                    try {
-                        const res = await fetch(`/api/candidates/${cand.id}`, {
-                            method: "DELETE",
-                            headers: { "Content-Type": "application/json" }
-                        });
-                        if (res.ok) {
-                            // Animate card out
-                            card.style.transition = "opacity 0.25s ease, transform 0.25s ease";
-                            card.style.opacity = "0";
-                            card.style.transform = "translateX(-10px)";
-                            setTimeout(() => {
-                                loadCandidates(currentJobId);
-                                if (selectedCandidate && selectedCandidate.id === cand.id) {
-                                    const noPro = document.getElementById("no-profile-selected");
-                                    const proDet = document.getElementById("profile-details");
-                                    if (noPro) noPro.style.display = "flex";
-                                    if (proDet) proDet.style.display = "none";
-                                    selectedCandidate = null;
-                                }
-                            }, 280);
-                        } else {
-                            const errData = await res.json().catch(() => ({}));
-                            console.error("Delete failed:", errData.detail || res.status);
-                            // Restore dropdown
-                            dropdown.innerHTML = `<button class="menu-item-delete" id="delete-${cand.id}">&#128465; Delete</button>`;
-                            dropdown.style.display = "block";
-                        }
-                    } catch (err) {
-                        console.error("Delete network error:", err);
-                        dropdown.style.display = "none";
-                    }
-                });
-            });
+            }
+            return;
         }
 
-        card.addEventListener("click", (e) => {
-            // Don't select candidate when clicking the actions menu area
-            if (e.target.closest(".candidate-card-actions")) return;
-            selectCandidate(cand);
-            if (e.target.closest(".btn-view-resume")) {
-                selectTab("resume");
+        // 2. Delete button click — FIX 1: Opens a modal overlay instead of inline dropdown
+        //    Modal lives outside .candidate-card DOM so SSE re-renders cannot destroy it
+        const deleteBtn = e.target.closest(".menu-item-delete");
+        if (deleteBtn) {
+            e.stopPropagation();
+            e.preventDefault();
+            // Close the 3-dot dropdown immediately
+            const dropdown = document.getElementById(`dropdown-${candId}`);
+            if (dropdown) dropdown.style.display = "none";
+            // Look up display name
+            const candForName = candidates.find(c => Number(c.id) === candId);
+            const displayName = (candForName && candForName.name) ? candForName.name.split(' ')[0] : 'candidate';
+            // Open the modal
+            const modal = document.getElementById("delete-candidate-modal");
+            const nameSpan = document.getElementById("delete-modal-candidate-name");
+            if (modal && nameSpan) {
+                nameSpan.textContent = displayName;
+                modal.dataset.candidateId = candId;
+                modal.style.display = "flex";
+                isDeleteDropdownOpen = true;
             }
-        });
+            return;
+        }
 
-        listContainer.appendChild(card);
+        // 3. Confirm Cancel (legacy inline — kept for safety, modal handles this now)
+        // 4. Confirm Yes (legacy inline — kept for safety, modal handles this now)
+
+        // 5. Default Card click (selects candidate)
+        // Don't select candidate if clicking the dropdown or action menu area
+        if (e.target.closest(".candidate-card-actions")) return;
+
+        const cand = candidates.find(c => Number(c.id) === candId);
+        if (!cand) return;
+
+        selectCandidate(cand);
+        if (e.target.closest(".btn-view-resume")) {
+            selectTab("resume");
+        }
     });
 }
 
+// FIX 1: Modal-based delete confirmation — lives outside candidate-card DOM,
+// immune to SSE-driven renderCandidates() surgical updates.
+function initDeleteCandidateModal() {
+    // Inject modal HTML into body if not already present
+    if (!document.getElementById("delete-candidate-modal")) {
+        const modalHtml = `
+        <div id="delete-candidate-modal" style="
+            display:none; position:fixed; inset:0; z-index:9000;
+            background:rgba(0,0,0,0.55); backdrop-filter:blur(4px);
+            align-items:center; justify-content:center;
+        ">
+            <div style="
+                background:var(--bg-card,#1e293b); border:1px solid var(--border-color,#334155);
+                border-radius:12px; padding:1.75rem 2rem; min-width:280px; max-width:380px;
+                box-shadow:0 25px 50px rgba(0,0,0,0.4); text-align:center;
+                animation: modalFadeIn 0.18s ease;
+            ">
+                <div style="font-size:2rem;margin-bottom:0.6rem;">🗑️</div>
+                <p style="margin:0 0 0.35rem; font-size:1rem; font-weight:700; color:var(--text-main,#f1f5f9);">Delete Candidate?</p>
+                <p style="margin:0 0 1.4rem; font-size:0.88rem; color:var(--text-muted,#94a3b8);">This will permanently remove <strong id='delete-modal-candidate-name'></strong> and all associated data.</p>
+                <div style="display:flex; gap:0.75rem; justify-content:center;">
+                    <button id="delete-modal-cancel-btn" style="
+                        flex:1; padding:0.6rem 0; border-radius:7px; border:1px solid var(--border-color,#334155);
+                        background:var(--bg-surface,#0f172a); color:var(--text-main,#f1f5f9);
+                        font-size:0.88rem; font-weight:600; cursor:pointer; transition:opacity 0.15s;
+                    ">Cancel</button>
+                    <button id="delete-modal-confirm-btn" style="
+                        flex:1; padding:0.6rem 0; border-radius:7px; border:none;
+                        background:#dc2626; color:#fff;
+                        font-size:0.88rem; font-weight:600; cursor:pointer; transition:opacity 0.15s;
+                    ">Yes, Delete</button>
+                </div>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML("beforeend", modalHtml);
+    }
+
+    const modal      = document.getElementById("delete-candidate-modal");
+    const confirmBtn = document.getElementById("delete-modal-confirm-btn");
+    const cancelBtn  = document.getElementById("delete-modal-cancel-btn");
+
+    function closeModal() {
+        modal.style.display = "none";
+        isDeleteDropdownOpen = false;
+    }
+
+    cancelBtn.addEventListener("click", closeModal);
+
+    // Close on backdrop click
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    confirmBtn.addEventListener("click", async () => {
+        const targetId = Number(modal.dataset.candidateId);
+        if (!targetId) { closeModal(); return; }
+
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = "Deleting…";
+
+        try {
+            const res = await fetch(`/api/candidates/${targetId}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" }
+            });
+            closeModal();
+            if (res.ok) {
+                // Animate the card out
+                const card = document.querySelector(`.candidate-card[data-id="${targetId}"]`);
+                if (card) {
+                    card.style.transition = "opacity 0.25s ease, transform 0.25s ease";
+                    card.style.opacity = "0";
+                    card.style.transform = "translateX(-10px)";
+                }
+                setTimeout(() => {
+                    if (selectedCandidate && Number(selectedCandidate.id) === targetId) {
+                        const noPro = document.getElementById("no-profile-selected");
+                        const proDet = document.getElementById("profile-details");
+                        if (noPro) noPro.style.display = "flex";
+                        if (proDet) proDet.style.display = "none";
+                        selectedCandidate = null;
+                    }
+                    loadCandidates(currentJobId, false);
+                }, 280);
+            } else {
+                const errData = await res.json().catch(() => ({}));
+                console.error("Delete failed:", errData.detail || res.status);
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = "Yes, Delete";
+                modal.style.display = "flex";
+                isDeleteDropdownOpen = true;
+            }
+        } catch (err) {
+            console.error("Delete network error:", err);
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = "Yes, Delete";
+            modal.style.display = "flex";
+            isDeleteDropdownOpen = true;
+        }
+    });
+}
 
 function renderPaginationUI() {
     const pagBar = document.getElementById("pagination-bar");
@@ -825,10 +1114,7 @@ function renderPaginationUI() {
         if (start > 1) {
             const btn1 = document.createElement("button");
             btn1.textContent = "1";
-            btn1.addEventListener("click", () => {
-                currentPage = 1;
-                loadCandidates(currentJobId);
-            });
+            btn1.setAttribute("data-page", "1");
             pagesContainer.appendChild(btn1);
             
             if (start > 2) {
@@ -842,13 +1128,10 @@ function renderPaginationUI() {
         for (let p = start; p <= end; p++) {
             const btn = document.createElement("button");
             btn.textContent = p;
+            btn.setAttribute("data-page", p);
             if (p === current) {
                 btn.className = "active";
             }
-            btn.addEventListener("click", () => {
-                currentPage = p;
-                loadCandidates(currentJobId);
-            });
             pagesContainer.appendChild(btn);
         }
         
@@ -862,10 +1145,7 @@ function renderPaginationUI() {
             
             const btnLast = document.createElement("button");
             btnLast.textContent = total;
-            btnLast.addEventListener("click", () => {
-                currentPage = total;
-                loadCandidates(currentJobId);
-            });
+            btnLast.setAttribute("data-page", total);
             pagesContainer.appendChild(btnLast);
         }
     }
@@ -883,29 +1163,60 @@ function renderPaginationUI() {
 }
 
 function initPaginationControls() {
-    const prevBtn = document.getElementById("btn-prev-page");
-    const nextBtn = document.getElementById("btn-next-page");
+    const pagBar = document.getElementById("pagination-bar");
+    if (pagBar) {
+        // Event delegation on the pagination bar container
+        pagBar.addEventListener("click", (e) => {
+            // 1. Prev Button Click
+            const prevBtn = e.target.closest("#btn-prev-page");
+            if (prevBtn) {
+                if (pagination && pagination.has_prev) {
+                    currentPage = pagination.page - 1;
+                    loadCandidates(currentJobId);
+                }
+                return;
+            }
+
+            // 2. Next Button Click
+            const nextBtn = e.target.closest("#btn-next-page");
+            if (nextBtn) {
+                if (pagination && pagination.has_next) {
+                    currentPage = pagination.page + 1;
+                    loadCandidates(currentJobId);
+                }
+                return;
+            }
+
+            // 3. Numbered Page Button Click
+            const pageBtn = e.target.closest("[data-page]");
+            if (pageBtn) {
+                const pageNum = parseInt(pageBtn.getAttribute("data-page"));
+                if (pageNum >= 1 && pagination && pageNum <= pagination.total_pages) {
+                    currentPage = pageNum;
+                    loadCandidates(currentJobId);
+                }
+                return;
+            }
+
+            // 4. Toggle Show All Click
+            const toggleShowAll = e.target.closest("#btn-toggle-show-all");
+            if (toggleShowAll) {
+                showAllEnabled = !showAllEnabled;
+                if (showAllEnabled) {
+                    toggleShowAll.textContent = "Show Paginated";
+                    toggleShowAll.classList.add("active");
+                } else {
+                    toggleShowAll.textContent = "Show All";
+                    toggleShowAll.classList.remove("active");
+                }
+                currentPage = 1;
+                loadCandidates(currentJobId);
+                return;
+            }
+        });
+    }
+
     const jumpInput = document.getElementById("input-jump-page");
-    const toggleShowAll = document.getElementById("btn-toggle-show-all");
-    
-    if (prevBtn) {
-        prevBtn.addEventListener("click", () => {
-            if (pagination && pagination.has_prev) {
-                currentPage = pagination.page - 1;
-                loadCandidates(currentJobId);
-            }
-        });
-    }
-    
-    if (nextBtn) {
-        nextBtn.addEventListener("click", () => {
-            if (pagination && pagination.has_next) {
-                currentPage = pagination.page + 1;
-                loadCandidates(currentJobId);
-            }
-        });
-    }
-    
     if (jumpInput) {
         jumpInput.addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
@@ -917,21 +1228,6 @@ function initPaginationControls() {
                     alert(`Please enter a valid page number between 1 and ${pagination ? pagination.total_pages : 1}`);
                 }
             }
-        });
-    }
-    
-    if (toggleShowAll) {
-        toggleShowAll.addEventListener("click", () => {
-            showAllEnabled = !showAllEnabled;
-            if (showAllEnabled) {
-                toggleShowAll.textContent = "Show Paginated";
-                toggleShowAll.classList.add("active");
-            } else {
-                toggleShowAll.textContent = "Show All";
-                toggleShowAll.classList.remove("active");
-            }
-            currentPage = 1;
-            loadCandidates(currentJobId);
         });
     }
 }
@@ -988,20 +1284,20 @@ function updateBatchProgressUI(data) {
             }
 
             if (log.status === "failed" || log.status === "unable_to_process") {
-                if (iconEl) iconEl.textContent = "❌";
+                if (iconEl) iconEl.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#ef4444"/><path d="M8 8l8 8M16 8l-8 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>`;
                 if (statusLabel) {
                     statusLabel.className = "file-status-label failed";
                     statusLabel.textContent = `Failed: ${log.error_message || 'Processing error'}`;
                     statusLabel.title = log.error_message || '';
                 }
             } else if (log.status === "scored" || log.status === "shortlisted" || log.status === "completed") {
-                if (iconEl) iconEl.textContent = "✅";
+                if (iconEl) iconEl.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#22c55e"/><path d="M7 12l3.5 3.5L17 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
                 if (statusLabel) {
                     statusLabel.className = "file-status-label success";
                     statusLabel.textContent = log.match_score != null ? `Scored (${log.match_score}%)` : "Scored";
                 }
             } else {
-                if (iconEl) iconEl.textContent = "⏳";
+                if (iconEl) iconEl.innerHTML = `<svg class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#94a3b8" stroke-width="2"/><path d="M12 2a10 10 0 0110 10" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/></svg>`;
                 if (statusLabel) {
                     statusLabel.className = "file-status-label processing";
                     statusLabel.textContent = log.status.charAt(0).toUpperCase() + log.status.slice(1) + (log.status === "uploading" ? ` (${fp}%)` : "");
@@ -1011,97 +1307,108 @@ function updateBatchProgressUI(data) {
     }
 
     updateJobBatchSummary(data);
-    if (percent === 100) loadCandidates(currentJobId);
+    if (percent === 100) loadCandidates(currentJobId, false);
 }
 
 function updateJobBatchSummary(data) {
     const summaryDiv = document.getElementById("upload-batch-summary");
     if (!summaryDiv) return;
-    
+
     if (!data) {
         summaryDiv.style.display = "none";
+        summaryDiv.removeAttribute("data-batch-id");
         return;
     }
-    
+
     summaryDiv.style.display = "block";
-    
-    const total = data.total_files;
-    const processed = data.processed_count;
-    const failed = data.failed_count;
-    const processing = data.processing_count;
-    
-    summaryDiv.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-            <span>📤 Last Upload: <strong>${processed}/${total}</strong> processed | <strong>${processing}</strong> processing | <strong>${failed}</strong> failed</span>
-            <button type="button" class="btn btn-secondary btn-sm" id="btn-toggle-batch-details" style="padding: 2px 8px; font-size: 0.75rem; height: auto;">
-                View Details
-            </button>
-        </div>
-        <div id="batch-details-inline-panel" class="batch-details-inline" style="display: none; width: 100%; margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 8px;">
-            <!-- Expandable logs table injected here -->
-        </div>
-    `;
-    
-    const toggleBtn = document.getElementById("btn-toggle-batch-details");
-    const inlinePanel = document.getElementById("batch-details-inline-panel");
-    
-    if (toggleBtn && inlinePanel) {
-        const isExpanded = localStorage.getItem(`batch-details-expanded-${data.id}`) === "true";
-        inlinePanel.style.display = isExpanded ? "block" : "none";
-        toggleBtn.textContent = isExpanded ? "Hide Details" : "View Details";
-        
-        toggleBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const expanded = inlinePanel.style.display === "none";
-            inlinePanel.style.display = expanded ? "block" : "none";
-            toggleBtn.textContent = expanded ? "Hide Details" : "View Details";
-            localStorage.setItem(`batch-details-expanded-${data.id}`, expanded);
-        });
-        
-        if (data.logs && data.logs.length > 0) {
-            let tableHtml = `
-                <table class="batch-logs-table" style="width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 0.8rem; text-align: left;">
-                    <thead>
-                        <tr style="border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--text-muted);">
-                            <th style="padding: 6px 4px;">File Name</th>
-                            <th style="padding: 6px 4px; width: 100px;">Status</th>
-                            <th style="padding: 6px 4px;">Error Message</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            data.logs.forEach(log => {
-                let statusClass = "uploaded";
-                let statusText = log.status;
-                if (log.status === "failed" || log.status === "unable_to_process") statusClass = "failed";
-                else if (log.status === "scored" || log.status === "completed") statusClass = "scored";
-                else if (log.status === "parsing" || log.status === "structured") statusClass = "parsing";
-                
-                if (log.match_score !== null && log.match_score !== undefined) {
-                    statusText = `Scored (${log.match_score}%)`;
-                }
-                
-                const errMsg = log.error_message || "-";
-                tableHtml += `
-                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-main);">
-                        <td style="padding: 6px 4px; font-weight: 500; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${log.file_name}">${log.file_name}</td>
-                        <td style="padding: 6px 4px;">
-                            <span class="status-tag ${statusClass}" style="font-size: 0.7rem; padding: 2px 6px;">${statusText}</span>
-                        </td>
-                        <td style="padding: 6px 4px; color: var(--text-muted); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${errMsg}">${errMsg}</td>
-                    </tr>
-                `;
+
+    const total      = data.total_files      ?? 0;
+    const processed  = data.processed_count  ?? 0;
+    const failed     = data.failed_count     ?? 0;
+    const processing = data.processing_count ?? 0;
+
+    // --- Build shell only once per batch (avoid full innerHTML on every SSE tick) ---
+    if (summaryDiv.dataset.batchId !== String(data.id)) {
+        summaryDiv.dataset.batchId = data.id;
+        summaryDiv.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <span style="display:inline-flex;align-items:center;gap:6px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;"><path d="M12 16V8M12 8L9 11M12 8L15 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 15v1a5 5 0 005 5h8a5 5 0 005-5v-1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    Last Upload: <strong id="bsum-processed">0</strong>/<strong id="bsum-total">0</strong> processed | <strong id="bsum-processing">0</strong> processing | <strong id="bsum-failed">0</strong> failed
+                </span>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-toggle-batch-details" style="padding:2px 8px;font-size:0.75rem;height:auto;">
+                    View Details
+                </button>
+            </div>
+            <div id="batch-details-inline-panel" class="batch-details-inline" style="display:none;width:100%;margin-top:10px;border-top:1px solid var(--border-color);padding-top:8px;">
+                <!-- Expandable logs table injected here -->
+            </div>
+        `;
+
+        // Wire toggle button once
+        const toggleBtn   = summaryDiv.querySelector("#btn-toggle-batch-details");
+        const inlinePanel = summaryDiv.querySelector("#batch-details-inline-panel");
+        if (toggleBtn && inlinePanel) {
+            const isExpanded = localStorage.getItem(`batch-details-expanded-${data.id}`) === "true";
+            inlinePanel.style.display = isExpanded ? "block" : "none";
+            toggleBtn.textContent = isExpanded ? "Hide Details" : "View Details";
+            toggleBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const expanded = inlinePanel.style.display === "none";
+                inlinePanel.style.display = expanded ? "block" : "none";
+                toggleBtn.textContent = expanded ? "Hide Details" : "View Details";
+                localStorage.setItem(`batch-details-expanded-${data.id}`, expanded);
             });
-            tableHtml += `
-                    </tbody>
-                </table>
-            `;
-            inlinePanel.innerHTML = tableHtml;
-        } else {
-            inlinePanel.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.75rem; padding: 10px;">No files registered.</div>`;
         }
     }
+
+    // --- In-place text updates (no DOM restructuring, no reflow) ---
+    const elProcessed  = summaryDiv.querySelector("#bsum-processed");
+    const elTotal      = summaryDiv.querySelector("#bsum-total");
+    const elProcessing = summaryDiv.querySelector("#bsum-processing");
+    const elFailed     = summaryDiv.querySelector("#bsum-failed");
+    if (elProcessed)  elProcessed.textContent  = processed;
+    if (elTotal)      elTotal.textContent       = total;
+    if (elProcessing) elProcessing.textContent  = processing;
+    if (elFailed)     elFailed.textContent      = failed;
+
+    // --- Refresh log details table only when panel is visible ---
+    const inlinePanel = summaryDiv.querySelector("#batch-details-inline-panel");
+    if (inlinePanel && inlinePanel.style.display !== "none" && data.logs && data.logs.length > 0) {
+        let tableHtml = `
+            <table class="batch-logs-table" style="width:100%;border-collapse:collapse;margin-top:6px;font-size:0.8rem;text-align:left;">
+                <thead>
+                    <tr style="border-bottom:1px solid var(--border-color);font-weight:600;color:var(--text-muted);">
+                        <th style="padding:6px 4px;">File Name</th>
+                        <th style="padding:6px 4px;width:100px;">Status</th>
+                        <th style="padding:6px 4px;">Error Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        data.logs.forEach(log => {
+            let statusClass = "uploaded";
+            let statusText  = log.status;
+            if (log.status === "failed" || log.status === "unable_to_process") statusClass = "failed";
+            else if (log.status === "scored" || log.status === "completed")    statusClass = "scored";
+            else if (log.status === "parsing" || log.status === "structured")  statusClass = "parsing";
+            if (log.match_score !== null && log.match_score !== undefined) {
+                statusText = `Scored (${log.match_score}%)`;
+            }
+            const errMsg = log.error_message || "-";
+            tableHtml += `
+                <tr style="border-bottom:1px solid var(--border-color);color:var(--text-main);">
+                    <td style="padding:6px 4px;font-weight:500;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${log.file_name}">${log.file_name}</td>
+                    <td style="padding:6px 4px;"><span class="status-tag ${statusClass}" style="font-size:0.7rem;padding:2px 6px;">${statusText}</span></td>
+                    <td style="padding:6px 4px;color:var(--text-muted);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${errMsg}">${errMsg}</td>
+                </tr>
+            `;
+        });
+        tableHtml += `</tbody></table>`;
+        inlinePanel.innerHTML = tableHtml;
+    }
 }
+
 
 async function fetchLastBatchForJob(jobId) {
     if (activeBatchSSE) {
@@ -1162,14 +1469,37 @@ async function fetchLastBatchForJob(jobId) {
 }
 
 function subscribeToBatchSSE(batchId) {
+    if (activeBatchSSE && activeBatchSSE.batchId === batchId) {
+        return;
+    }
     if (activeBatchSSE) activeBatchSSE.close();
 
     // Backend emits plain "data:" lines (no named event) so onmessage fires correctly
     activeBatchSSE = new EventSource(`/api/sse/batch/${batchId}`);
+    activeBatchSSE.batchId = batchId;
     activeBatchSSE.onmessage = (e) => {
         try {
             const data = JSON.parse(e.data);
             updateBatchProgressUI(data);
+
+            // Throttle SSE-triggered candidate reloads to at most once every 2 s.
+            // Without this, every SSE tick fires a full fetch+DOM rebuild which
+            // causes the candidate list to flash/shake continuously while parsing.
+            if (currentJobId) {
+                const hasRelevantCandidate = !data.logs || data.logs.length === 0 || data.logs.some(log => {
+                    if (!log.candidate_id) return true;
+                    return candidates.some(c => Number(c.id) === Number(log.candidate_id)) || (pagination && candidates.length < pagination.limit) || !pagination;
+                });
+
+                if (hasRelevantCandidate) {
+                    if (!_batchSSECandidateReloadTimer) {
+                        _batchSSECandidateReloadTimer = setTimeout(() => {
+                            _batchSSECandidateReloadTimer = null;
+                            if (currentJobId) loadCandidates(currentJobId, false);
+                        }, 2000);
+                    }
+                }
+            }
             // Update session history entry
             const idx = window.uploadBatches.findIndex(b => b.id === batchId);
             if (idx !== -1) {
@@ -1298,13 +1628,16 @@ function selectCandidate(cand) {
     statusBadge.textContent = badgeInfo.label;
     statusBadge.className = "badge " + badgeInfo.className;
     
+    // Update the interview status tracker (timeline thread)
+    updateStatusTracker(cand);
+    
     const isErrorState = cand.status === "failed" || cand.status === "unable_to_process";
     const isErrorOrManual = isErrorState || cand.status === "manual_reviewed";
     
     if (isErrorOrManual) {
-        document.getElementById("detail-overall-score").textContent = "0";
+        document.getElementById("detail-overall-score").textContent = "-";
     } else {
-        document.getElementById("detail-overall-score").textContent = cand.match_score !== null ? cand.match_score : "-";
+        document.getElementById("detail-overall-score").textContent = cand.match_score !== null && cand.match_score !== undefined ? cand.match_score : "-";
     }
     
     document.getElementById("detail-email").textContent = cand.email || "-";
@@ -1361,6 +1694,10 @@ function selectCandidate(cand) {
         } else if (cand.match_breakdown) {
             const breakdown = cand.match_breakdown;
             matchContainer.innerHTML = `
+                <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.2rem; text-align: center; margin-bottom: 1.5rem;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem;">Resume Match Score</div>
+                    <div style="font-size: 2.2rem; font-weight: 700; color: var(--color-primary);">${cand.match_score !== null && cand.match_score !== undefined ? cand.match_score : '–'}<span style="font-size: 1rem; color: var(--text-muted);">/100</span></div>
+                </div>
                 <div class="match-score-summary" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
                     <div style="background-color: var(--bg-surface); padding: 0.8rem; border-radius: 6px; text-align: center; border: 1px solid var(--border-color);">
                         <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Skills</div>
@@ -1437,16 +1774,37 @@ async function renderInterviewTabs(candidateId) {
                 verdict = "Manual Reviewed";
                 bannerColor = "#3b82f6";
             }
+            let bannerHtml = "";
+            if (cand.status === "manual_reviewed") {
+                bannerHtml = `
+                    <div style="background-color: #eff6ff; border: 1px solid #dbeafe; border-radius: 8px; padding: 1.5rem; text-align: center; margin-bottom: 1.5rem;">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📝</div>
+                        <h3 style="color: #1d4ed8; margin: 0 0 0.5rem 0; font-size: 1.25rem;">Manually Reviewed</h3>
+                        <p style="color: #1e3a8a; margin: 0; font-size: 0.95rem;">This candidate has been manually evaluated and reviewed by a recruiter.</p>
+                    </div>
+                `;
+            } else {
+                const isResumeFailure = (cand.match_score === null || cand.match_score === undefined);
+                const errorTitle = isResumeFailure ? "Resume Review Required" : "Interview Evaluation Error";
+                const errorMessage = isResumeFailure 
+                    ? "This candidate's resume processing failed. Manual review is required to determine next steps."
+                    : "This candidate's voice interview processing encountered a system error. Manual review is required to determine next steps.";
+                
+                bannerHtml = `
+                    <div style="background-color: #fef2f2; border: 1px solid #fee2e2; border-radius: 8px; padding: 1.5rem; text-align: center; margin-bottom: 1.5rem;">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⚠️</div>
+                        <h3 style="color: #b91c1c; margin: 0 0 0.5rem 0; font-size: 1.25rem;">${errorTitle}</h3>
+                        <p style="color: #7f1d1d; margin: 0; font-size: 0.95rem;">${errorMessage}</p>
+                    </div>
+                `;
+            }
+
             overallContainer.innerHTML = `
-                <div style="background-color: #fef2f2; border: 1px solid #fee2e2; border-radius: 8px; padding: 1.5rem; text-align: center; margin-bottom: 1.5rem;">
-                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⚠️</div>
-                    <h3 style="color: #b91c1c; margin: 0 0 0.5rem 0; font-size: 1.25rem;">Candidate Review Required</h3>
-                    <p style="color: #7f1d1d; margin: 0; font-size: 0.95rem;">This candidate's resume processing failed. Manual review is required to determine next steps.</p>
-                </div>
+                ${bannerHtml}
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom: 1.5rem;">
                     <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:1.2rem; text-align:center;">
-                        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:.4rem;">Overall Score</div>
-                        <div style="font-size:2.2rem; font-weight:700; color:${bannerColor};">0<span style="font-size:1rem; color:var(--text-muted)">/100</span></div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:.4rem;">Resume Match Score</div>
+                        <div style="font-size:2.2rem; font-weight:700; color:var(--color-primary);">${cand.match_score !== null && cand.match_score !== undefined ? cand.match_score : '–'}<span style="font-size:1rem; color:var(--text-muted)">/100</span></div>
                     </div>
                     <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:1.2rem; text-align:center;">
                         <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:.4rem;">AI Verdict</div>
@@ -1518,7 +1876,7 @@ async function renderInterviewTabs(candidateId) {
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
                     <div style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:8px;padding:1.2rem;text-align:center;">
                         <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem;">Technical Score</div>
-                        <div style="font-size:2.2rem;font-weight:700;color:var(--color-primary);">${iv.vic_score !== null ? iv.vic_score : '–'}<span style="font-size:1rem;color:var(--text-muted)">/100</span></div>
+                        <div style="font-size:2.2rem;font-weight:700;color:var(--color-primary);">${iv.vic_score !== null && iv.vic_score !== undefined ? iv.vic_score : '–'}<span style="font-size:1rem;color:var(--text-muted)">/100</span></div>
                     </div>
                     <div style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:8px;padding:1.2rem;text-align:center;">
                         <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem;">Status</div>
@@ -1571,18 +1929,20 @@ async function renderInterviewTabs(candidateId) {
                 transcriptHtml = `<p style="color:var(--text-muted);font-size:0.88rem;margin-top:1.5rem;">Transcript not yet available.</p>`;
             }
 
-            // Audio player section
+            // FIX 5: Audio player — use voice_ogg_url (S3 OGG, stable) with fallback to recording_url.
+            // Calls /api/interviews/{id}/audio which generates a fresh presigned S3 URL for the OGG file.
             let audioHtml = "";
-            if (iv.recording_url) {
+            const hasAudio = iv.voice_ogg_url || iv.recording_url;
+            if (hasAudio) {
                 audioHtml = `
                     <div id="recording-player-container" style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:12px;padding:1.2rem;margin-bottom:1.5rem;text-align:center;box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-                        <span style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:0.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:0.35rem;">
+                        <span style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:0.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:0.35rem;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-primary);"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
                             Full Interview Recording
                         </span>
                         <div id="recording-player-wrapper" style="display:flex;justify-content:center;align-items:center;min-height:40px;">
                             <span style="font-size:0.85rem;color:var(--text-muted);display:flex;align-items:center;gap:0.5rem;">
-                                Loading recording...
+                                Loading recording…
                             </span>
                         </div>
                     </div>`;
@@ -1590,27 +1950,30 @@ async function renderInterviewTabs(candidateId) {
 
             vicContainer.innerHTML = scoreHeader + audioHtml + criteriaHtml + summaryHtml + transcriptHtml;
 
-            // Fetch the presigned recording URL if it exists
-            if (iv.recording_url) {
-                fetch(`/api/interviews/${iv.id}/recording-url`)
+            // FIX 5: Fetch fresh presigned URL from /audio endpoint (uses voice_ogg_url S3 key)
+            if (hasAudio) {
+                fetch(`/api/interviews/${iv.id}/audio`)
                     .then(r => {
-                        if (!r.ok) throw new Error("Not found");
+                        if (!r.ok) throw new Error(`Audio endpoint returned ${r.status}`);
                         return r.json();
                     })
-                    .then(urlData => {
+                    .then(audioData => {
                         const wrapper = document.getElementById("recording-player-wrapper");
                         if (wrapper) {
                             wrapper.innerHTML = `
-                                <audio controls src="${urlData.recording_url}" style="width:100%;max-width:100%;margin:0 auto;display:block;outline:none;border-radius:8px;height:40px;"></audio>
+                                <audio controls style="width:100%;max-width:100%;margin:0 auto;display:block;outline:none;border-radius:8px;height:40px;">
+                                    <source src="${audioData.url}" type="${audioData.content_type || 'audio/ogg'}">
+                                    Your browser does not support this audio format.
+                                </audio>
                             `;
                         }
                     })
                     .catch(err => {
-                        console.error("Failed to fetch signed recording URL:", err);
+                        console.error("Failed to load interview audio:", err);
                         const wrapper = document.getElementById("recording-player-wrapper");
                         if (wrapper) {
                             wrapper.innerHTML = `
-                                <span style="font-size:0.85rem;color:#dc2626;font-weight:500;">Recording file not found or expired</span>
+                                <span style="font-size:0.85rem;color:#dc2626;font-weight:500;">⚠️ Recording unavailable or still processing</span>
                             `;
                         }
                     });
@@ -1629,6 +1992,20 @@ async function renderInterviewTabs(candidateId) {
                     <p style="margin:0;font-size:0.95rem;">Behavioral analysis not yet available.</p>
                     <p style="margin:.5rem 0 0;font-size:0.85rem;">Runs automatically after interview recording is processed.</p>
                 </div>`;
+        // FIX 3: Show explicit error state when bc_scores contains the STT failure error flag
+        } else if (iv.bc_scores.error === "bc_scoring_failed") {
+            bcContainer.innerHTML = `
+                <div style="text-align:center;padding:3rem 1rem;">
+                    <div style="font-size:2.5rem;margin-bottom:1rem;">⚠️</div>
+                    <p style="margin:0;font-size:0.95rem;font-weight:600;color:var(--color-danger,#ef4444);">Behavioral Analysis Unavailable</p>
+                    <p style="margin:.5rem 0 1rem;font-size:0.85rem;color:var(--text-muted);">
+                        The speech-to-text service (smallest.ai) failed after 3 retry attempts.<br>
+                        VIC technical scores are unaffected. Overall score excludes the BC component.
+                    </p>
+                    <div style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:8px;padding:0.8rem 1rem;font-size:0.8rem;color:var(--text-muted);text-align:left;max-width:340px;margin:0 auto;">
+                        <strong>Detail:</strong> ${iv.bc_scores.error_detail || 'STT failure'}
+                    </div>
+                </div>`;
         } else {
             const bc = iv.bc_scores;
             const sm = bc.speech_metrics || {};
@@ -1638,7 +2015,7 @@ async function renderInterviewTabs(candidateId) {
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.5rem;">
                     <div style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:8px;padding:1rem;text-align:center;">
                         <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.35rem;">Behavioral Score</div>
-                        <div style="font-size:2rem;font-weight:700;color:var(--color-primary);">${iv.bc_score !== null ? iv.bc_score : '–'}<span style="font-size:.9rem;color:var(--text-muted)">/100</span></div>
+                        <div style="font-size:2rem;font-weight:700;color:var(--color-primary);">${iv.bc_score !== null && iv.bc_score !== undefined ? iv.bc_score : '–'}<span style="font-size:.9rem;color:var(--text-muted)">/100</span></div>
                     </div>
                     <div style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:8px;padding:1rem;text-align:center;">
                         <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.35rem;">WPM</div>
@@ -1664,7 +2041,7 @@ async function renderInterviewTabs(candidateId) {
             } else if (bc.integrity_flag === false) {
                 integrityBannerHtml = `
                     <div style="background:rgba(22,163,74,0.08);border:1px solid rgba(22,163,74,0.25);border-radius:8px;padding:.8rem 1.2rem;margin-bottom:1.2rem;display:flex;gap:.75rem;align-items:center;">
-                        <span style="font-size:1.1rem;">✅</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;"><circle cx="12" cy="12" r="10" fill="#22c55e"/><path d="M7 12l3.5 3.5L17 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         <span style="color:#16a34a;font-size:0.88rem;font-weight:500;">No speech pattern anomalies detected.</span>
                     </div>`;
             }
@@ -1736,7 +2113,7 @@ async function renderInterviewTabs(candidateId) {
             } else {
                 eventsHtml = `
                     <div style="margin-top:1.5rem;padding:.8rem 1rem;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:6px;display:flex;gap:.6rem;align-items:center;">
-                        <span>✅</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;"><circle cx="12" cy="12" r="10" fill="#22c55e"/><path d="M7 12l3.5 3.5L17 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         <span style="font-size:0.85rem;color:var(--text-muted);">No integrity events recorded.</span>
                     </div>`;
             }
@@ -1758,7 +2135,7 @@ async function renderInterviewTabs(candidateId) {
         if (!iv) {
             overallContainer.innerHTML = `
                 <div style="text-align:center;padding:3rem 1rem;color:var(--text-muted);">
-                    <div style="font-size:2.5rem;margin-bottom:1rem;">📊</div>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin:0 auto 1rem;display:block;opacity:0.35;"><path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     <p style="margin:0;font-size:0.95rem;">No interview data yet.</p>
                 </div>`;
             const cand = selectedCandidate;
@@ -1781,18 +2158,22 @@ async function renderInterviewTabs(candidateId) {
 
             // Fetch candidate-level data (overall_score, ai_verdict, report_pdf_url) from detail
             const cand = selectedCandidate;
-            const matchScore  = cand.match_score || 0;
-            const vicScore    = iv.vic_score || 0;
-            const bcScore     = iv.bc_score  || 0;
+            // Use null-safe values — do NOT coerce null to 0 (null means not yet scored)
+            const matchScore  = (cand.match_score  !== null && cand.match_score  !== undefined) ? cand.match_score  : null;
+            const vicScore    = (iv.vic_score  !== null && iv.vic_score  !== undefined) ? iv.vic_score  : null;
+            const bcScore     = (iv.bc_score   !== null && iv.bc_score   !== undefined) ? iv.bc_score   : null;
 
-            // If BB6 hasn't run yet, calculate locally for display
-            const calcOverall = Math.round((matchScore * 0.40) + (vicScore * 0.35) + (bcScore * 0.25));
-            const displayOverall = iv.overall_score || calcOverall;
+            // If BB6 hasn't run yet, calculate locally for display only if all 3 scores exist
+            let calcOverall = null;
+            if (matchScore !== null && vicScore !== null && bcScore !== null) {
+                calcOverall = Math.round((matchScore * 0.40) + (vicScore * 0.35) + (bcScore * 0.25));
+            }
+            const displayOverall = iv.overall_score !== null && iv.overall_score !== undefined ? iv.overall_score : (calcOverall !== null ? calcOverall : '–');
 
             // Verdict
             let displayVerdict = iv.ai_verdict || "–";
             let verdictColor   = verdictColors[displayVerdict] || "var(--color-primary)";
-            if (displayVerdict === "–" && calcOverall > 0) {
+            if (displayVerdict === "–" && calcOverall !== null && calcOverall > 0) {
                 if (calcOverall >= 90)      { displayVerdict = "Strong Hire"; verdictColor = "#16a34a"; }
                 else if (calcOverall >= 75) { displayVerdict = "Hire";        verdictColor = "#22c55e"; }
                 else if (calcOverall >= 60) { displayVerdict = "Hold";        verdictColor = "#d97706"; }
@@ -1852,14 +2233,53 @@ async function renderInterviewTabs(candidateId) {
                     style="width:100%;padding:.75rem;border-radius:8px;border:none;cursor:pointer;
                     background:linear-gradient(135deg,var(--color-primary),#4f46e5);
                     color:#fff;font-size:0.9rem;font-weight:600;margin-top:.5rem;">
-                    ⚡ Generate AI Report
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Generate AI Report
                    </button>` : "";
 
-            const reportStatus = iv.ai_verdict
-                ? `<div style="background:rgba(22,163,74,0.08);border:1px solid rgba(22,163,74,0.2);border-radius:6px;
-                    padding:.7rem 1rem;text-align:center;font-size:0.85rem;color:#16a34a;font-weight:500;margin-top:.5rem;">
-                    ✓ Report generated &amp; ready to download
-                   </div>` : "";
+            let reportStatus = "";
+            if (iv.ai_verdict) {
+                reportStatus = `
+                    <div style="background:rgba(22,163,74,0.08);border:1px solid rgba(22,163,74,0.2);border-radius:6px;
+                        padding:.7rem 1rem;text-align:center;font-size:0.85rem;color:#16a34a;font-weight:500;margin-top:.5rem;margin-bottom:1rem;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10" fill="#22c55e"/><path d="M7 12l3.5 3.5L17 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Consolidated Report Generated
+                    </div>
+                    <div id="pdf-report-download-container" style="margin-top:0.5rem;margin-bottom:1.5rem;">
+                        <span style="font-size:0.85rem;color:var(--text-muted);">Fetching PDF download link...</span>
+                    </div>
+                `;
+                
+                // Fetch presigned URL asynchronously
+                fetch(`/api/candidates/${candidateId}/report`)
+                    .then(r => {
+                        if (!r.ok) throw new Error("PDF not ready or not found");
+                        return r.json();
+                    })
+                    .then(dlData => {
+                        const dlContainer = document.getElementById("pdf-report-download-container");
+                        if (dlContainer) {
+                            dlContainer.innerHTML = `
+                                <a href="${dlData.report_url}" target="_blank" download class="btn btn-primary"
+                                   style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;
+                                          font-weight:600;font-size:0.9rem;padding:10px;border-radius:8px;
+                                          background:linear-gradient(135deg, var(--color-primary), #4f46e5); color:#fff; border:none; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M8 12V2M4 8l4 4 4-4M2 14h12"/></svg>
+                                    Download PDF Report
+                                </a>
+                            `;
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Failed to load PDF report download link:", err);
+                        const dlContainer = document.getElementById("pdf-report-download-container");
+                        if (dlContainer) {
+                            dlContainer.innerHTML = `
+                                <span style="font-size:0.85rem;color:#dc2626;font-weight:500;">Failed to retrieve download link.</span>
+                            `;
+                        }
+                    });
+            }
 
             overallContainer.innerHTML = gauge + verdictBadge + breakdownTable + generateBtn + reportStatus;
 
@@ -1908,9 +2328,11 @@ function getStatusLabelAndClass(status) {
         case "uploaded": return { label: "Uploaded", className: "badge-uploaded" };
         case "parsing": return { label: "Parsing...", className: "badge-parsing" };
         case "structured": return { label: "Structured", className: "badge-structured" };
+        case "new":
         case "scored": return { label: "Scored", className: "badge-scored" };
         case "shortlisted": return { label: "Shortlisted", className: "badge-shortlisted" };
         case "rejected": return { label: "Rejected", className: "badge-rejected" };
+        case "manual_review":
         case "failed": return { label: "Review Needed", className: "badge-failed" };
         case "interview_invited": return { label: "Invited", className: "badge-interview_invited" };
         case "interview_ongoing": return { label: "Live", className: "badge-interview_ongoing" };
@@ -1923,6 +2345,102 @@ function getStatusLabelAndClass(status) {
     }
 }
 
+function updateStatusTracker(cand) {
+    const container = document.getElementById("status-tracker-container");
+    const btn = document.getElementById("btn-interview-status");
+    if (!container) return;
+
+    if (isStatusTrackerExpanded) {
+        container.style.display = "block";
+        if (btn) {
+            btn.classList.add("active");
+            btn.style.backgroundColor = "var(--border-hover)";
+        }
+    } else {
+        container.style.display = "none";
+        if (btn) {
+            btn.classList.remove("active");
+            btn.style.backgroundColor = "";
+        }
+    }
+
+    // Step 1: Invite Link Sent
+    let step1Class = "pending";
+    let step1Node = "1";
+    let step1Desc = "Candidate has not been invited yet.";
+    const inviteSentStatuses = ["interview_invited", "interview_ongoing", "interview_completed", "rejected_post_interview", "hired", "final_evaluation"];
+    const hasBeenInvited = inviteSentStatuses.includes(cand.status) || cand.latest_invite_token;
+    
+    if (hasBeenInvited) {
+        step1Class = "completed";
+        step1Node = "✓";
+        step1Desc = "Invite link successfully generated and dispatched.";
+    }
+
+    // Step 2: Interview Started / Attendance
+    let step2Class = "pending";
+    let step2Node = "2";
+    let step2Title = "Interview Started";
+    let step2Desc = "Waiting for candidate to join the WebRTC session.";
+
+    const startedStatuses = ["interview_ongoing", "interview_completed", "rejected_post_interview", "hired", "final_evaluation"];
+    if (startedStatuses.includes(cand.status)) {
+        step2Class = cand.status === "interview_ongoing" ? "ongoing" : "completed";
+        step2Node = cand.status === "interview_ongoing" ? "▶" : "✓";
+        step2Desc = "Candidate joined the live WebRTC room and started speaking.";
+    } else if (cand.status === "interview_invited") {
+        // No Show / Not Started
+        step2Class = "no-show";
+        step2Node = "⚠";
+        step2Title = "No Show / Not Started";
+        step2Desc = "Candidate has not accessed the interview portal yet.";
+    }
+
+    // Step 3: Interview Completed & Scored
+    let step3Class = "pending";
+    let step3Node = "3";
+    let step3Title = "Interview Completed";
+    let step3Desc = "Waiting for interview completion and scoring.";
+
+    const completedStatuses = ["interview_completed", "rejected_post_interview", "hired", "final_evaluation"];
+    if (completedStatuses.includes(cand.status)) {
+        step3Class = "completed";
+        step3Node = "✓";
+        step3Desc = "Interview ended. AI grading and audio analysis finished.";
+    } else if (cand.status === "interview_ongoing") {
+        step3Class = "ongoing";
+        step3Node = "▶";
+        step3Title = "Interview Ongoing";
+        step3Desc = "Active real-time conversation is in progress.";
+    }
+
+    container.innerHTML = `
+        <div class="status-tracker">
+            <div class="status-tracker-step ${step1Class}">
+                <div class="status-tracker-node">${step1Node}</div>
+                <div class="status-tracker-content">
+                    <h4 class="status-tracker-title">Invite Link Sent</h4>
+                    <p class="status-tracker-desc">${step1Desc}</p>
+                </div>
+            </div>
+            <div class="status-tracker-step ${step2Class}">
+                <div class="status-tracker-node">${step2Node}</div>
+                <div class="status-tracker-content">
+                    <h4 class="status-tracker-title">${step2Title}</h4>
+                    <p class="status-tracker-desc">${step2Desc}</p>
+                </div>
+            </div>
+            <div class="status-tracker-step ${step3Class}">
+                <div class="status-tracker-node">${step3Node}</div>
+                <div class="status-tracker-content">
+                    <h4 class="status-tracker-title">${step3Title}</h4>
+                    <p class="status-tracker-desc">${step3Desc}</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 function getScoreGroupClass(score) {
     if (score === null || score === undefined) return "score-badge-red";
     const s = parseInt(score, 10);
@@ -1932,6 +2450,27 @@ function getScoreGroupClass(score) {
     if (s >= 60) return "score-badge-yellow";
     if (s >= 45) return "score-badge-orange";
     return "score-badge-red";
+}
+
+function formatRelativeTime(dateStr) {
+    if (!dateStr) return "";
+    try {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHrs = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHrs / 24);
+
+        if (diffMins < 1) return "Just now";
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHrs < 24) return `${diffHrs}h ago`;
+        if (diffDays === 1) return "Yesterday";
+        if (diffDays < 7) return `${diffDays}d ago`;
+        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    } catch (e) {
+        return "";
+    }
 }
 
 function setButtonLoading(button, isLoading, textWhileLoading) {
@@ -2124,20 +2663,22 @@ function renderFooterButtons(cand) {
                 headers: { "Content-Type": "application/json" }
             });
             if (res.ok) {
-                alert(`${cand.name} has been deleted successfully.`);
-                candidates = candidates.filter(c => c.id !== cand.id);
-                renderCandidates();
-                document.getElementById("no-profile-selected").style.display = "flex";
-                document.getElementById("profile-details").style.display = "none";
+                // Hide the detail panel immediately
+                const noPro = document.getElementById("no-profile-selected");
+                const proDet = document.getElementById("profile-details");
+                if (noPro) noPro.style.display = "flex";
+                if (proDet) proDet.style.display = "none";
                 selectedCandidate = null;
+                // Refresh from server so currentSearch is respected and list is accurate
+                await loadCandidates(currentJobId, false);
             } else {
                 const errData = await res.json().catch(() => ({}));
                 alert(`Delete failed: ${errData.detail || res.statusText}`);
+                setButtonLoading(btnDelete, false);
             }
         } catch (err) {
             console.error("Delete network error:", err);
             alert("Error: Connection failed.");
-        } finally {
             setButtonLoading(btnDelete, false);
         }
     });
@@ -2269,6 +2810,7 @@ function renderFooterButtons(cand) {
     } else if (status === "interview_invited" || status === "interview_scheduled") {
         btnInvite.textContent = "Resend Invite";
         checkInviteLock(cand.id, btnInvite);
+        
         footer.appendChild(btnInvite);
         footer.appendChild(btnReject);
     } else if (status === "interview_ongoing") {
@@ -2315,11 +2857,167 @@ function initJobModal() {
     const closeModal = () => {
         modalPostJob.style.display = "none";
         formPostJob.reset();
+        const previewPanel = document.getElementById("jd-preview-panel");
+        if (previewPanel) previewPanel.style.display = "none";
+        ["rvc", "vic", "bc"].forEach(k => {
+            const container = document.getElementById(`suggestion-${k}-container`);
+            const textEl = document.getElementById(`suggestion-${k}-text`);
+            if (container) container.style.display = "none";
+            if (textEl) textEl.textContent = "";
+        });
     };
 
     btnPostJob.addEventListener("click", openModal);
     if (modalClose) modalClose.addEventListener("click", closeModal);
     if (modalCancel) modalCancel.addEventListener("click", closeModal);
+
+    // JD File Upload & Extraction Handler
+    const btnUploadJd = document.getElementById("btn-upload-jd");
+    const jdFileInput = document.getElementById("jd-file-input");
+    const jobJdTextarea = document.getElementById("job-jd");
+
+    if (btnUploadJd && jdFileInput && jobJdTextarea) {
+        btnUploadJd.addEventListener("click", () => {
+            jdFileInput.click();
+        });
+
+        jdFileInput.addEventListener("change", async () => {
+            if (!jdFileInput.files || jdFileInput.files.length === 0) return;
+            const file = jdFileInput.files[0];
+            
+            // Check size locally first (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert("File is too large. Maximum size is 5MB.");
+                jdFileInput.value = "";
+                return;
+            }
+
+            const originalBtnHtml = btnUploadJd.innerHTML;
+            btnUploadJd.disabled = true;
+            btnUploadJd.innerHTML = `<svg class="spin" width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#94a3b8" stroke-width="2"/><path d="M12 2a10 10 0 0110 10" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/></svg><span>Extracting...</span>`;
+            jobJdTextarea.disabled = true;
+            const prevJdValue = jobJdTextarea.value;
+            jobJdTextarea.value = "[Extracting Job Description from file...]";
+
+            try {
+                const formData = new FormData();
+                formData.append("file", file);
+
+                const response = await fetch("/api/jobs/extract-jd", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    let errMsg = `HTTP error ${response.status}`;
+                    try {
+                        const errData = await response.json();
+                        errMsg = errData.detail || errMsg;
+                    } catch (_) {}
+                    throw new Error(errMsg);
+                }
+
+                const data = await response.json();
+                jobJdTextarea.value = data.extracted_text;
+                // Dispatch input event to trigger any textarea auto-resize if any
+                jobJdTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+
+                // Display Left Panel JD Preview
+                const previewPanel = document.getElementById("jd-preview-panel");
+                const fileInfo = document.getElementById("jd-file-info");
+                const previewText = document.getElementById("jd-preview-text");
+                if (previewPanel && fileInfo && previewText) {
+                    fileInfo.textContent = `File: ${data.file_name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                    previewText.textContent = data.extracted_text;
+                    previewPanel.style.display = "flex";
+                }
+
+                // AI suggestions triggers
+                const titleVal = document.getElementById("job-title").value || "AI Engineer";
+                const deptVal = document.getElementById("job-dept").value || "Engineering";
+                
+                // Show temporary placeholder status for suggestions
+                ["rvc", "vic", "bc"].forEach(k => {
+                    const container = document.getElementById(`suggestion-${k}-container`);
+                    const textEl = document.getElementById(`suggestion-${k}-text`);
+                    if (container && textEl) {
+                        textEl.textContent = "AI is thinking...";
+                        container.style.display = "block";
+                    }
+                });
+
+                const suggestionResponse = await fetch("/api/jobs/generate-suggestions", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        jd_text: data.extracted_text,
+                        job_title: titleVal,
+                        department: deptVal
+                    })
+                });
+
+                if (suggestionResponse.ok) {
+                    const sugData = await suggestionResponse.json();
+                    if (sugData.rvc) {
+                        document.getElementById("suggestion-rvc-text").textContent = sugData.rvc;
+                        document.getElementById("suggestion-rvc-container").style.display = "block";
+                    } else {
+                        document.getElementById("suggestion-rvc-container").style.display = "none";
+                    }
+                    if (sugData.vic) {
+                        document.getElementById("suggestion-vic-text").textContent = sugData.vic;
+                        document.getElementById("suggestion-vic-container").style.display = "block";
+                    } else {
+                        document.getElementById("suggestion-vic-container").style.display = "none";
+                    }
+                    if (sugData.bc) {
+                        document.getElementById("suggestion-bc-text").textContent = sugData.bc;
+                        document.getElementById("suggestion-bc-container").style.display = "block";
+                    } else {
+                        document.getElementById("suggestion-bc-container").style.display = "none";
+                    }
+                } else {
+                    console.error("Failed to generate criteria suggestions");
+                    ["rvc", "vic", "bc"].forEach(k => {
+                        const container = document.getElementById(`suggestion-${k}-container`);
+                        if (container) container.style.display = "none";
+                    });
+                }
+
+            } catch (err) {
+                console.error("Failed to extract JD:", err);
+                alert(`Failed to extract Job Description: ${err.message}`);
+                jobJdTextarea.value = prevJdValue;
+                ["rvc", "vic", "bc"].forEach(k => {
+                    const container = document.getElementById(`suggestion-${k}-container`);
+                    if (container) container.style.display = "none";
+                });
+            } finally {
+                btnUploadJd.disabled = false;
+                btnUploadJd.innerHTML = originalBtnHtml;
+                jobJdTextarea.disabled = false;
+                jdFileInput.value = "";
+            }
+        });
+    }
+
+    // Event delegation for suggestions "Use Suggested" click handlers
+    document.addEventListener("click", (e) => {
+        const btn = e.target.closest(".btn-use-suggestion");
+        if (btn) {
+            const targetId = btn.getAttribute("data-target");
+            const targetTextarea = document.getElementById(targetId);
+            const sourceTextId = targetId.replace("job-", "suggestion-") + "-text";
+            const containerId = targetId.replace("job-", "suggestion-") + "-container";
+            
+            const suggestedText = document.getElementById(sourceTextId).textContent;
+            if (targetTextarea && suggestedText && suggestedText !== "AI is thinking...") {
+                targetTextarea.value = suggestedText;
+                targetTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                document.getElementById(containerId).style.display = "none";
+            }
+        }
+    });
 
     // Close modal on click outside modal content
     modalPostJob.addEventListener("click", (e) => {
@@ -2345,6 +3043,10 @@ function initJobModal() {
             rvc: document.getElementById("job-rvc").value,
             vic: document.getElementById("job-vic").value,
             bc: document.getElementById("job-bc").value,
+            interview_duration: parseInt(document.getElementById("job-duration").value, 10),
+            invite_expires_hours: parseInt(document.getElementById("job-expiry-hours").value, 10),
+            invite_expiry_value: parseInt(document.getElementById("job-expiry-hours").value, 10),
+            invite_expiry_unit: "hours"
         };
 
         try {
@@ -2406,77 +3108,183 @@ function renderNoJobSelectedState() {
     }
 }
 
+/* ===========================================================================
+ * JOB LAZY LOADING  — Infinite scroll for Open / Closed job sections
+ * ===========================================================================
+ *
+ * Strategy:
+ *  - Each section (open / closed) maintains its own offset cursor.
+ *  - An IntersectionObserver watches a sentinel <li> placed at the end of
+ *    each list.  When it enters the viewport we fetch the next page.
+ *  - The server now returns { jobs, total_count } so we know when to stop.
+ *  - The global `jobs[]` array is a flat union of all fetched pages (used
+ *    by selectJob / renderJobs for highlight / lookup purposes).
+ * =========================================================================== */
+
 /**
- * Load all jobs from backend
+ * Full reset + initial load for both sections.  Call on DOMContentLoaded
+ * and after a job is created / deleted.
  */
 async function loadJobs() {
-    try {
-        const response = await fetch("/api/jobs");
-        if (response.ok) {
-            jobs = await response.json();
-            renderJobs();
-            // Automatically select first open job if none is selected yet and open jobs exist
-            if (!currentJobId && jobs.length > 0) {
-                const firstOpenJob = jobs.find(j => j.status === "open");
-                if (firstOpenJob) {
-                    selectJob(firstOpenJob.id);
-                } else {
-                    renderNoJobSelectedState();
-                }
-            } else if (jobs.length === 0) {
-                renderNoJobSelectedState();
-            }
+    // Reset lazy state
+    for (const section of ["open", "closed"]) {
+        jobLazyState[section] = { offset: 0, limit: 10, total: 0, loading: false, done: false };
+    }
+    // Tear down existing observers
+    Object.values(jobLazyObservers).forEach(obs => obs && obs.disconnect());
+    jobLazyObservers = {};
+
+    // Clear displayed lists
+    const openList = document.getElementById("open-jobs-list");
+    const closedList = document.getElementById("closed-jobs-list");
+    if (openList) openList.innerHTML = "";
+    if (closedList) closedList.innerHTML = "";
+    jobs = [];
+
+    // Load first page for each section in parallel
+    await Promise.all([
+        _fetchJobPage("open"),
+        _fetchJobPage("closed"),
+    ]);
+
+    // Auto-select behaviour (unchanged)
+    if (!currentJobId) {
+        const firstOpen = jobs.find(j => j.status === "open");
+        if (firstOpen) {
+            selectJob(firstOpen.id);
+        } else if (jobs.length > 0) {
+            selectJob(jobs[0].id);
+        } else {
+            renderNoJobSelectedState();
         }
-    } catch (e) {
-        console.error("Failed to load jobs:", e);
     }
 }
 
 /**
- * Render jobs list into Left Panel sidebar
+ * Fetch one page of jobs for the given section ("open" | "closed") and
+ * append the items to the list.  Attaches a sentinel + observer when needed.
+ */
+async function _fetchJobPage(section) {
+    const state = jobLazyState[section];
+    if (state.loading || state.done) return;
+    state.loading = true;
+
+    const statusParam = section === "open" ? "open" : "closed";
+    const url = `/api/jobs?status=${statusParam}&limit=${state.limit}&offset=${state.offset}`;
+
+    try {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        const newJobs = data.jobs || [];
+        state.total = data.total_count ?? 0;
+
+        // Merge into global jobs array (avoiding duplicates by id)
+        const existingIds = new Set(jobs.map(j => j.id));
+        newJobs.forEach(j => { if (!existingIds.has(j.id)) jobs.push(j); });
+
+        // Append list items
+        const listId   = section === "open" ? "open-jobs-list" : "closed-jobs-list";
+        const list = document.getElementById(listId);
+        if (list) {
+            // Remove existing sentinel before appending new items
+            const oldSentinel = list.querySelector(".job-lazy-sentinel");
+            if (oldSentinel) oldSentinel.remove();
+
+            newJobs.forEach(job => {
+                list.appendChild(_buildJobItem(job));
+            });
+
+            state.offset += newJobs.length;
+            const hasMore = state.offset < state.total;
+
+            if (hasMore) {
+                _attachSentinel(section, list);
+            } else {
+                state.done = true;
+                // Show "end of list" marker only if any jobs were loaded
+                if (state.total > 0) {
+                    const endMark = document.createElement("li");
+                    endMark.className = "job-list-end-mark";
+                    endMark.textContent = `All ${state.total} job${state.total > 1 ? 's' : ''} loaded`;
+                    list.appendChild(endMark);
+                }
+            }
+        }
+
+        // Update badge with server total
+        _updateJobCountBadge(section, state.total);
+
+    } catch (err) {
+        console.error(`[LazyJobs] Failed to load ${section} page:`, err);
+    } finally {
+        state.loading = false;
+        // Re-highlight active job after every render pass
+        _highlightActiveJob();
+    }
+}
+
+/** Build a single job <li> element */
+function _buildJobItem(job) {
+    const li = document.createElement("li");
+    li.className = `job-item${Number(currentJobId) === Number(job.id) ? ' active' : ''}`;
+    li.dataset.id = job.id;
+    li.innerHTML = `
+        <div class="job-item-title" style="font-weight:500;">${job.title}</div>
+        <div class="job-item-dept" style="font-size:0.8rem;margin-top:0.2rem;color:var(--text-muted);">${job.department}</div>
+    `;
+    li.addEventListener("click", () => selectJob(job.id));
+    return li;
+}
+
+/** Re-apply .active class to the currently selected job across both lists */
+function _highlightActiveJob() {
+    document.querySelectorAll(".job-item").forEach(el => {
+        el.classList.toggle("active", Number(el.dataset.id) === Number(currentJobId));
+    });
+}
+
+/** Append a sentinel <li> and wire up IntersectionObserver */
+function _attachSentinel(section, list) {
+    // Disconnect old observer for this section
+    if (jobLazyObservers[section]) {
+        jobLazyObservers[section].disconnect();
+    }
+
+    const sentinel = document.createElement("li");
+    sentinel.className = "job-lazy-sentinel";
+    sentinel.innerHTML = `<span class="job-lazy-spinner"></span>`;
+    list.appendChild(sentinel);
+
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            _fetchJobPage(section);
+        }
+    }, { threshold: 0.1 });
+
+    observer.observe(sentinel);
+    jobLazyObservers[section] = observer;
+}
+
+/** Update the header count badge for a section using server total */
+function _updateJobCountBadge(section, total) {
+    const badgeId = section === "open" ? "open-jobs-count" : "closed-jobs-count";
+    const badge = document.getElementById(badgeId);
+    if (badge) badge.textContent = total;
+}
+
+/**
+ * Render jobs list — now only re-highlights active state.
+ * Full list DOM is managed by the lazy-loader pages.
  */
 function renderJobs() {
-    const openList = document.getElementById("open-jobs-list");
-    const closedList = document.getElementById("closed-jobs-list");
-
-    if (!openList || !closedList) return;
-
-    openList.innerHTML = "";
-    closedList.innerHTML = "";
-
-    jobs.forEach(job => {
-        const li = document.createElement("li");
-        li.className = `job-item ${currentJobId === job.id ? 'active' : ''}`;
-        li.dataset.id = job.id;
-
-        li.innerHTML = `
-            <div class="job-item-title" style="font-weight: 500;">${job.title}</div>
-            <div class="job-item-dept" style="font-size: 0.8rem; margin-top: 0.2rem;">${job.department}</div>
-        `;
-
-        li.addEventListener("click", () => {
-            selectJob(job.id);
-        });
-
-        if (job.status === "open") {
-            openList.appendChild(li);
-        } else {
-            closedList.appendChild(li);
-        }
-    });
-
-    updateJobCounts();
+    _highlightActiveJob();
+    // Counts are already maintained by _updateJobCountBadge
 }
 
 function updateJobCounts() {
-    const openJobs = jobs.filter(j => j.status === "open");
-    const closedJobs = jobs.filter(j => j.status !== "open");
-
-    const openCountBadge = document.getElementById("open-jobs-count");
-    const closedCountBadge = document.getElementById("closed-jobs-count");
-
-    if (openCountBadge) openCountBadge.textContent = openJobs.length;
-    if (closedCountBadge) closedCountBadge.textContent = closedJobs.length;
+    // No-op: counts are managed by _updateJobCountBadge using server total
 }
 
 function initAccordion() {
@@ -2511,6 +3319,74 @@ function initAccordion() {
 }
 
 /**
+ * Delegate job deletion events to avoid binding issues with dynamic elements
+ */
+function initJobDeleteDelegation() {
+    document.addEventListener("click", async (e) => {
+        // 1. Delete button click: show confirmation inline
+        const deleteBtn = e.target.closest("button[id^='btn-delete-job-']");
+        if (deleteBtn) {
+            e.stopPropagation();
+            const jobId = deleteBtn.id.replace("btn-delete-job-", "");
+            const deleteControl = document.getElementById(`delete-job-control-${jobId}`);
+            const job = jobs.find(j => Number(j.id) === Number(jobId));
+            if (deleteControl && job) {
+                deleteControl.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:6px;background:var(--bg-surface);border:1px solid rgba(220,38,38,0.4);border-radius:8px;padding:4px 8px;font-size:0.8rem;color:var(--text-main);white-space:nowrap;">
+                        <span>Delete <b>${job.title}</b>?</span>
+                        <button id="confirm-delete-job-yes" class="confirm-delete-job-yes-btn" data-job-id="${job.id}" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:0.8rem;cursor:pointer;font-weight:600;">Yes</button>
+                        <button id="confirm-delete-job-no" class="confirm-delete-job-no-btn" data-job-id="${job.id}" style="background:var(--bg-sidebar);color:var(--text-main);border:1px solid var(--border-color);border-radius:4px;padding:3px 10px;font-size:0.8rem;cursor:pointer;">Cancel</button>
+                    </div>
+                `;
+            }
+            return;
+        }
+
+        // 2. Cancel delete click: restore original delete button
+        const cancelBtn = e.target.closest("#confirm-delete-job-no") || e.target.closest(".confirm-delete-job-no-btn");
+        if (cancelBtn) {
+            e.stopPropagation();
+            const jobId = cancelBtn.dataset.jobId;
+            const deleteControl = document.getElementById(`delete-job-control-${jobId}`);
+            if (deleteControl) {
+                deleteControl.innerHTML = `
+                    <button id="btn-delete-job-${jobId}" class="btn btn-sm" style="padding:0.35rem 0.75rem;font-size:0.8rem;background:rgba(220,38,38,0.1);color:#dc2626;border:1px solid rgba(220,38,38,0.3);border-radius:6px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:5px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Delete
+                    </button>
+                `;
+            }
+            return;
+        }
+
+        // 3. Confirm Yes click: perform the delete request
+        const yesBtn = e.target.closest("#confirm-delete-job-yes") || e.target.closest(".confirm-delete-job-yes-btn");
+        if (yesBtn) {
+            e.stopPropagation();
+            const jobId = yesBtn.dataset.jobId;
+            yesBtn.disabled = true;
+            yesBtn.textContent = "…";
+            try {
+                const res = await fetch(`/api/jobs/${jobId}`, { method: "DELETE" });
+                if (res.ok) {
+                    renderNoJobSelectedState();
+                    await loadJobs();
+                } else {
+                    const errData = await res.json().catch(() => ({}));
+                    alert(`Delete failed: ${errData.detail || res.statusText}`);
+                    selectJob(jobId);
+                }
+            } catch (err) {
+                console.error("Delete job network error:", err);
+                alert("Network error. Please try again.");
+                selectJob(jobId);
+            }
+            return;
+        }
+    });
+}
+
+/**
  * Selection logic for an active job role
  */
 function selectJob(jobId) {
@@ -2531,10 +3407,25 @@ function selectJob(jobId) {
     selectedCandidate = null;
 
     currentPage = 1;
+    if (activeBatchSSE) {
+        activeBatchSSE.close();
+        activeBatchSSE = null;
+    }
     loadCandidates(jobId);
     fetchLastBatchForJob(jobId);
 
     const job = jobs.find(j => Number(j.id) === Number(jobId));
+
+    if (job) {
+        // Automatically expand the accordion for the job's section
+        const section = job.status === "open" ? "open" : "closed";
+        const header = document.getElementById(`${section}-jobs-header`);
+        const content = document.getElementById(`${section}-jobs-content`);
+        if (header && content) {
+            header.setAttribute("aria-expanded", "true");
+            content.classList.remove("collapsed");
+        }
+    }
     
     // Manage Panel 2 upload controls based on job open/closed status
     const uploadResumesBtn = document.getElementById("btn-open-upload");
@@ -2552,8 +3443,13 @@ function selectJob(jobId) {
         if (!activeJobInfo) {
             activeJobInfo = document.createElement("div");
             activeJobInfo.id = "active-job-info";
-            const middlePanel = document.querySelector(".middle-panel");
-            middlePanel.insertBefore(activeJobInfo, middlePanel.firstChild);
+            const searchHeader = document.querySelector(".search-header");
+            if (searchHeader) {
+                searchHeader.insertAdjacentElement("afterend", activeJobInfo);
+            } else {
+                const middlePanel = document.querySelector(".middle-panel");
+                middlePanel.insertBefore(activeJobInfo, middlePanel.firstChild);
+            }
         }
         
         activeJobInfo.innerHTML = `
@@ -2567,8 +3463,9 @@ function selectJob(jobId) {
                         ${job.status === 'open' ? 'Close Job' : 'Reopen Job'}
                     </button>
                     <div id="delete-job-control-${job.id}" style="position:relative;">
-                        <button id="btn-delete-job-${job.id}" class="btn btn-sm" style="padding:0.35rem 0.75rem;font-size:0.8rem;background:rgba(220,38,38,0.1);color:#dc2626;border:1px solid rgba(220,38,38,0.3);border-radius:6px;cursor:pointer;font-weight:500;transition:background 0.2s;">
-                            🗑️ Delete
+                        <button id="btn-delete-job-${job.id}" class="btn btn-sm" style="padding:0.35rem 0.75rem;font-size:0.8rem;background:rgba(220,38,38,0.1);color:#dc2626;border:1px solid rgba(220,38,38,0.3);border-radius:6px;cursor:pointer;font-weight:500;transition:background 0.2s;display:inline-flex;align-items:center;gap:5px;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            Delete
                         </button>
                     </div>
                 </div>
@@ -2612,57 +3509,7 @@ function selectJob(jobId) {
             });
         }
 
-        // Delete Job button — inline Yes/Cancel confirmation
-        const deleteJobBtn = document.getElementById(`btn-delete-job-${job.id}`);
-        const deleteControl = document.getElementById(`delete-job-control-${job.id}`);
-        if (deleteJobBtn && deleteControl) {
-            deleteJobBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                // Replace button with inline confirmation
-                deleteControl.innerHTML = `
-                    <div style="display:flex;align-items:center;gap:6px;background:var(--bg-surface);border:1px solid rgba(220,38,38,0.4);border-radius:8px;padding:4px 8px;font-size:0.8rem;color:var(--text-main);white-space:nowrap;">
-                        <span>Delete <b>${job.title}</b>?</span>
-                        <button id="confirm-delete-job-yes" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:0.8rem;cursor:pointer;font-weight:600;">Yes</button>
-                        <button id="confirm-delete-job-no" style="background:var(--bg-sidebar);color:var(--text-main);border:1px solid var(--border-color);border-radius:4px;padding:3px 10px;font-size:0.8rem;cursor:pointer;">Cancel</button>
-                    </div>
-                `;
-
-                document.getElementById("confirm-delete-job-no").addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    deleteControl.innerHTML = `
-                        <button id="btn-delete-job-${job.id}" class="btn btn-sm" style="padding:0.35rem 0.75rem;font-size:0.8rem;background:rgba(220,38,38,0.1);color:#dc2626;border:1px solid rgba(220,38,38,0.3);border-radius:6px;cursor:pointer;font-weight:500;">
-                            🗑️ Delete
-                        </button>
-                    `;
-                    // Re-bind the click (new DOM node)
-                    document.getElementById(`btn-delete-job-${job.id}`).addEventListener("click", () => {
-                        selectJob(job.id); // easiest re-render to restore the confirm flow
-                    });
-                });
-
-                document.getElementById("confirm-delete-job-yes").addEventListener("click", async (e) => {
-                    e.stopPropagation();
-                    const yesBtn = document.getElementById("confirm-delete-job-yes");
-                    if (yesBtn) { yesBtn.disabled = true; yesBtn.textContent = "…"; }
-                    try {
-                        const res = await fetch(`/api/jobs/${job.id}`, { method: "DELETE" });
-                        if (res.ok) {
-                            renderNoJobSelectedState();
-                            await loadJobs();
-                            renderJobs();
-                        } else {
-                            const errData = await res.json().catch(() => ({}));
-                            alert(`Delete failed: ${errData.detail || res.statusText}`);
-                            selectJob(job.id);
-                        }
-                    } catch (err) {
-                        console.error("Delete job network error:", err);
-                        alert("Network error. Please try again.");
-                        selectJob(job.id);
-                    }
-                });
-            });
-        }
+        // Delete Job button — handled via delegated event listeners in initJobDeleteDelegation()
     } else {
         const activeJobInfo = document.getElementById("active-job-info");
         if (activeJobInfo) activeJobInfo.innerHTML = "";
@@ -2755,9 +3602,46 @@ function initFilters() {
             }, 300);
         });
     }
+
+    // Setup expand/collapse for middle panel top section
+    const btnToggleTop = document.getElementById("btn-toggle-top-section");
+    const middlePanel = document.getElementById("middle-panel");
+    if (btnToggleTop && middlePanel) {
+        const isCollapsed = localStorage.getItem("middle-top-collapsed") === "true";
+        if (isCollapsed) {
+            middlePanel.classList.add("top-collapsed");
+            const btnText = document.getElementById("text-toggle-top");
+            if (btnText) btnText.textContent = "Expand";
+        }
+        
+        btnToggleTop.addEventListener("click", () => {
+            const willCollapse = !middlePanel.classList.contains("top-collapsed");
+            if (willCollapse) {
+                middlePanel.classList.add("top-collapsed");
+                const btnText = document.getElementById("text-toggle-top");
+                if (btnText) btnText.textContent = "Expand";
+                localStorage.setItem("middle-top-collapsed", "true");
+            } else {
+                middlePanel.classList.remove("top-collapsed");
+                const btnText = document.getElementById("text-toggle-top");
+                if (btnText) btnText.textContent = "Collapse";
+                localStorage.setItem("middle-top-collapsed", "false");
+            }
+        });
+    }
 }
 
 function initActionButtons() {
+    const btnInterviewStatus = document.getElementById("btn-interview-status");
+    if (btnInterviewStatus) {
+        btnInterviewStatus.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (!selectedCandidate) return;
+            isStatusTrackerExpanded = !isStatusTrackerExpanded;
+            updateStatusTracker(selectedCandidate);
+        });
+    }
+
     const btnDecisionHire = document.getElementById("btn-decision-hire");
     const btnDecisionReject = document.getElementById("btn-decision-reject");
     const saveNoteBtn = document.getElementById("btn-save-note");
@@ -2963,11 +3847,46 @@ function initUploadModal() {
     const closeModal = () => {
         // DO NOT wipe progress container — preserve state for when modal re-opens
         modalUpload.style.display = "none";
+        if (currentJobId) {
+            loadCandidates(currentJobId, false);
+        }
     };
 
     if (closeBtn)  closeBtn.addEventListener("click",  closeModal);
     if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
     modalUpload.addEventListener("click", (e) => { if (e.target === modalUpload) closeModal(); });
+}
+
+/**
+ * Initialize original resume preview modal events
+ */
+function initResumeModal() {
+    const btnCheckResume     = document.getElementById("btn-check-resume");
+    const modalResume        = document.getElementById("modal-view-resume");
+    const closeBtn           = document.getElementById("modal-resume-close");
+    const closeFooterBtn     = document.getElementById("btn-modal-close-resume");
+
+    if (btnCheckResume) {
+        btnCheckResume.addEventListener("click", () => {
+            if (selectedCandidate) {
+                openResumeModal(selectedCandidate);
+            } else {
+                alert("Please select a candidate first.");
+            }
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeResumeModal);
+    }
+    if (closeFooterBtn) {
+        closeFooterBtn.addEventListener("click", closeResumeModal);
+    }
+    if (modalResume) {
+        modalResume.addEventListener("click", (e) => {
+            if (e.target === modalResume) closeResumeModal();
+        });
+    }
 }
 
 /** Render a single batch row's HTML helper */
@@ -3129,6 +4048,7 @@ function renderBatchHistory() {
     const historyList  = document.getElementById("upload-batch-history-list");
     if (!historyPanel || !historyList) return;
 
+    const savedScroll = historyList.scrollTop;
     let currentJobSessionBatches = window.uploadBatches.filter(b => b.job_id === currentJobId);
 
     // Clean up completed batches older than 10 minutes from session history
@@ -3189,6 +4109,9 @@ function renderBatchHistory() {
     }
 
     historyList.innerHTML = html;
+
+    // Restore scroll position to avoid the list jumping back to top
+    if (savedScroll !== undefined) historyList.scrollTop = savedScroll;
 
     const showOlderLink = document.getElementById("link-show-older-batches");
     if (showOlderLink) {
@@ -3490,11 +4413,48 @@ function selectTab(tabName) {
 window.selectTab = selectTab;
 
 async function loadCandidateOriginalResume(cand) {
-    const container = document.getElementById("resume-frame-container");
     const downloadBtn = document.getElementById("btn-download-resume");
-    if (!container) return;
+    if (downloadBtn) {
+        downloadBtn.style.display = "none";
+        downloadBtn.href = "#";
+    }
 
-    container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.9rem; padding: 2rem; display: flex; align-items: center; justify-content: center; height: 100%;"><span class="spinner" style="margin-right: 8px;"></span>Loading original resume...</div>`;
+    try {
+        const resp = await fetch(`/api/candidates/${cand.id}/resume-url`);
+        if (!resp.ok) {
+            throw new Error(`HTTP ${resp.status}`);
+        }
+        const data = await resp.json();
+        
+        if (downloadBtn) {
+            downloadBtn.style.display = "inline-flex";
+            downloadBtn.href = data.url;
+            downloadBtn.download = data.filename || "resume.pdf";
+        }
+    } catch (e) {
+        console.error("Failed to load original resume URL for download button:", e);
+    }
+}
+
+async function openResumeModal(cand) {
+    const modal = document.getElementById("modal-view-resume");
+    const container = document.getElementById("modal-resume-frame-container");
+    const downloadBtn = document.getElementById("btn-modal-download-resume");
+    const titleElement = document.getElementById("modal-resume-title");
+    
+    if (!modal || !container) return;
+
+    modal.style.display = "flex";
+    if (titleElement) {
+        titleElement.textContent = `Resume Preview — ${cand.name}`;
+    }
+
+    container.innerHTML = `
+        <div style="color: var(--text-muted); font-size: 0.95rem; padding: 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px;">
+            <span class="spinner"></span>
+            Loading original resume...
+        </div>
+    `;
     if (downloadBtn) {
         downloadBtn.style.display = "none";
         downloadBtn.href = "#";
@@ -3514,17 +4474,17 @@ async function loadCandidateOriginalResume(cand) {
         }
 
         container.innerHTML = `
-            <iframe src="${data.url}" style="width: 100%; height: 100%; border: none;" id="resume-iframe"></iframe>
+            <iframe src="${data.url}" style="width: 100%; height: 100%; border: none;" id="modal-resume-iframe"></iframe>
         `;
         
-        const iframe = document.getElementById("resume-iframe");
+        const iframe = document.getElementById("modal-resume-iframe");
         if (iframe) {
             iframe.onerror = () => {
-                showResumeFallback(data.url);
+                showModalResumeFallback(data.url);
             };
         }
     } catch (e) {
-        console.error("Failed to load original resume URL:", e);
+        console.error("Failed to load original resume URL for modal:", e);
         container.innerHTML = `
             <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
                 <p>Unable to load original resume preview.</p>
@@ -3534,17 +4494,29 @@ async function loadCandidateOriginalResume(cand) {
     }
 }
 
-function showResumeFallback(url) {
-    const container = document.getElementById("resume-frame-container");
+function showModalResumeFallback(url) {
+    const container = document.getElementById("modal-resume-frame-container");
     if (container) {
         container.innerHTML = `
             <div style="text-align: center; padding: 2rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; height: 100%;">
                 <p>Could not preview original resume directly inside the browser.</p>
-                <a href="${url}" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-weight: 600; text-decoration: none; border-radius: 4px;">
-                    <span>↗️ Open Resume in New Tab</span>
+                <a href="${url}" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; font-weight: 600; text-decoration: none; border-radius: 4px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    Open Resume in New Tab
                 </a>
             </div>
         `;
+    }
+}
+
+function closeResumeModal() {
+    const modal = document.getElementById("modal-view-resume");
+    if (modal) {
+        modal.style.display = "none";
+    }
+    const container = document.getElementById("modal-resume-frame-container");
+    if (container) {
+        container.innerHTML = "";
     }
 }
 

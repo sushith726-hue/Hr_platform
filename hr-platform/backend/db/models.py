@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, JSON, UUID
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, JSON, UUID, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from backend.db.session import Base
@@ -16,6 +16,10 @@ class Job(Base):
     bc = Column(Text, nullable=False)
     rubric_json = Column(JSON, nullable=True)
     status = Column(String(50), default="open", nullable=False)
+    interview_duration = Column(Integer, default=30, nullable=False)
+    invite_expiry_value = Column(Integer, default=24, nullable=False)
+    invite_expiry_unit = Column(String(50), default="hours", nullable=False)
+    invite_expires_hours = Column(Integer, default=24, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     candidates = relationship("Candidate", back_populates="job", cascade="all, delete-orphan")
@@ -48,6 +52,9 @@ class Candidate(Base):
     ai_verdict = Column(String(50), nullable=True)           # 'Strong Hire', 'Hire', 'Hold', 'Needs Review', 'Reject'
     report_pdf_url = Column(String(1024), nullable=True)     # S3 URL for the generated PDF report
 
+    # Resume deduplication: SHA-256 hex of the raw uploaded file bytes
+    resume_file_hash = Column(String(64), nullable=True, index=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     job = relationship("Job", back_populates="candidates")
@@ -76,6 +83,7 @@ class Interview(Base):
     bc_score = Column(Integer, nullable=True)               # Behavioral score 0-100
     vic_scores = Column(JSON, nullable=True)                # Detailed VIC breakdown JSONB
     bc_scores = Column(JSON, nullable=True)                 # Detailed BC breakdown + integrity JSONB
+    integrity_flag = Column(Boolean, default=False, nullable=False)
 
     # BB6: Final Report
     overall_score = Column(Integer, nullable=True)

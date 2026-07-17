@@ -299,3 +299,41 @@ If ANY checkbox is unchecked, the agent MUST:
 
 The agent MUST NOT skip this check. Ever.
 
+## 15. TEST EXECUTION RULES
+
+### Rule 1: Phase Gate
+Before starting any test phase, the agent must:
+- Print the phase name and purpose
+- List all tests in that phase
+- Ask: "Do you want to run this phase? (yes/no/skip)"
+- Wait for human response
+- Only proceed on "yes"
+
+### Rule 2: Test Gate
+Before running any individual test, the agent must:
+- Print the test name
+- Print the test objective (from docstring)
+- Ask: "Do you want to run this test? (yes/no/skip)"
+- Wait for human response
+- Only proceed on "yes"
+
+### Rule 3: Result Documentation
+After each test completes, the agent must:
+- Update the checkbox in the test script (# [ ] becomes # [x])
+- Update TEST_RESULTS.md with actual result and status
+- Write a plain-English summary of what happened
+
+### Rule 4: Issue Tracking
+If a test reveals unexpected behavior:
+- Document the exact observation
+- Explain why it differs from expected
+- Propose a fix approach
+- Ask for confirmation before implementing
+
+### Rule 5: Progress Summary
+After each phase completes, the agent must:
+- Show count of passed/failed/skipped tests
+- Show overall phase status
+- Ask if user wants to proceed to next phase
+
+

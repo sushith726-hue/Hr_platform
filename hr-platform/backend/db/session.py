@@ -24,31 +24,59 @@ def get_db():
     finally:
         db.close()
 
-def get_s3_client():
+def get_s3_client(public: bool = False):
     """
     Returns a configured boto3 client for S3/MinIO bucket operations
     using credentials and endpoints loaded from settings.
+    By default (public=False), resolves to the internal container endpoint (http://minio:9000)
+    when running inside Docker.
     """
+    import os
+    import socket
+
+    endpoint = settings.S3_ENDPOINT
+    verify_ssl = settings.S3_VERIFY_SSL
+
+    if not public:
+        # Resolve to internal container if inside Docker network
+        try:
+            socket.gethostbyname("minio")
+            endpoint = "http://minio:9000"
+            verify_ssl = False
+        except socket.gaierror:
+            # If not in Docker but localhost:9000 is open, use localhost
+            if endpoint and "localhost" not in endpoint and "127.0.0.1" not in endpoint:
+                try:
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.settimeout(0.5)
+                    s.connect(("127.0.0.1", 9000))
+                    s.close()
+                    endpoint = "http://127.0.0.1:9000"
+                    verify_ssl = False
+                except Exception:
+                    pass
+
     # Force signature version s3v4 to be fully compatible with MinIO and secure S3 configurations
     s3_client = boto3.client(
         "s3",
-        endpoint_url=settings.S3_ENDPOINT,
+        endpoint_url=endpoint,
         aws_access_key_id=settings.S3_ACCESS_KEY,
         aws_secret_access_key=settings.S3_SECRET_KEY,
         config=Config(signature_version="s3v4"),
-        region_name=settings.S3_REGION
+        region_name=settings.S3_REGION,
+        verify=verify_ssl
     )
 
     # Workaround for proxy path-stripping issue on our S3 endpoint (SignatureDoesNotMatch)
     # We strip '/s3/' from the request path before it is signed, and restore it after signing.
-    if settings.S3_ENDPOINT and "/s3" in settings.S3_ENDPOINT:
+    if endpoint and "/s3" in endpoint:
         def before_sign(request, **kwargs):
             if "/s3/" in request.url:
                 request.url = request.url.replace("/s3/", "/")
 
         def request_created(request, **kwargs):
             import urllib.parse
-            parsed = urllib.parse.urlparse(settings.S3_ENDPOINT)
+            parsed = urllib.parse.urlparse(endpoint)
             netloc = parsed.netloc
             parts = request.url.split(netloc + "/")
             if len(parts) == 2 and not parts[1].startswith("s3/"):

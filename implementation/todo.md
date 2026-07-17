@@ -331,3 +331,126 @@ This document lists the tasks required to implement the TalentStream HR Platform
 - [x] Code committed with message: "[Phase 9] Complete".
 - [x] No critical bugs open.
 
+
+---
+
+## Phase 10: Interview Tracker & Agent Safety
+* **Goal:** Implement the candidate detail panel's status tracking thread and resolve Voice Agent session property issues.
+* **Prerequisites:** Phase 9 complete.
+
+### Tasks
+- [x] Create the visual vertical stepper layout with CSS lines, nodes, text spacing, and pulsing animation.
+- [x] Place `#btn-interview-status` and `#status-tracker-container` inside index.html's candidate profile panel.
+- [x] Implement `updateStatusTracker(cand)` to map candidate statuses to the 3-step timeline.
+- [x] Toggle the status tracker display and button highlights on click, and keep it updated on candidate select.
+- [x] Override `session` in `CustomVoiceAgent` with a private property to avoid read-only mutation errors.
+- [x] Refactor agent warning and termination triggers to query local dictionaries rather than calling the read-only violation tracker state.
+
+### Smoke Test
+* **Test Name:** Status Tracker & Voice Agent Test
+* **Steps:**
+  1. Select a candidate on the dashboard and click the "Interview Status" button.
+  2. Verify the 3-step timeline shows current progress (invited, ongoing, or completed).
+  3. Start a mock voice session and verify no read-only or disconnect errors are logged by the agent.
+* **Expected Result:** Timeline renders dynamically based on the active candidate's status, and agent runs successfully without session exceptions.
+* **Pass Criteria:** CSS transitions look premium, steps map correctly to statuses, and tests execute cleanly.
+
+### Definition of Done
+- [x] All tasks complete.
+- [x] Smoke test passes.
+- [x] All docs updated.
+
+---
+
+## Phase 11: Middle Panel Expand & Collapse Controls
+* **Goal:** Implement expand/collapse functionality to hide the top section of the middle panel, improving vertical space utilization for the candidate list.
+* **Prerequisites:** Phase 10 complete.
+
+### Tasks
+- [x] Reorder middle panel layout by statically placing the search header at the very top, and moving active job details and progress panels below it.
+- [x] Shrink search input, sort selector, and button heights to a compact `32px` single-row container.
+- [x] Add the fixed-position `#btn-toggle-top-section` to the top controls row so its coordinates remain static when clicked.
+- [x] Implement the `.top-collapsed` CSS styling to hide `#active-job-info` and `#upload-batch-summary` instantly and rotate the chevron icon.
+- [x] Implement click event handler in `app.js` to toggle `.top-collapsed` and update the button label ("Expand" / "Collapse").
+- [x] Save and restore the preference state using `localStorage` under `middle-top-collapsed`.
+
+### Smoke Test
+* **Test Name:** Middle Panel Layout Toggle Test
+* **Steps:**
+*   1. Select an open job role to populate active job info.
+*   2. Click the "Collapse" button in the filter bar. Verify that the job info header disappears and the candidate cards shift up.
+*   3. Refresh the page. Verify the layout remains collapsed.
+*   4. Click "Expand" and confirm the job info header displays again.
+* **Expected Result:** The top section collapses and expands smoothly, and the state persists across refreshes.
+* **Pass Criteria:** CSS hide/show works instantly, layout flows correctly, and setting persists.
+
+### Definition of Done
+- [x] All tasks complete.
+- [x] Smoke test passes.
+- [x] All docs updated.
+
+---
+
+## Phase 12: Comprehensive Candidate Card Scoring Summary
+* **Goal:** Upgrade the recruiter dashboard candidate cards to display a comprehensive scoring summary—including resume, interview, behavioral, and overall scores—directly within the middle panel, using placeholders for pending data.
+* **Prerequisites:** Phase 11 complete.
+
+- [x] Modify the `/api/candidates` backend endpoint in `main.py` to pre-fetch linked interview `vic_score` and `bc_score` values.
+- [x] Format the candidate listing payloads to serialize `vic_score` and `bc_score` alongside standard candidate columns.
+- [x] Refactor the card rendering templates (both the surgical update and full rebuild loops) in `app.js` to render a horizontal flex row with score badges.
+- [x] Remove the redundant large circular score circle and replace it with a relative timestamp (`formatRelativeTime`).
+- [x] Adjust `.candidate-card-actions` position to `right: 8px` and add container padding to prevent text overlap.
+- [x] Add "Oldest First" sorting option (`date_asc`) to both backend sorting queries and the frontend dropdown control.
+- [x] Handle missing interview scores by rendering a professional dash (`–`) instead of 0.
+
+### Smoke Test
+* **Test Name:** Multi-Score Card & Sorting Verification Test
+* **Steps:**
+*   1. Select an active job with scored candidates.
+*   2. Verify that each candidate card displays CV, INT, BEH, and OVR scores inline under the email subtitle.
+*   3. Confirm that candidates without interviews show a dash (`–`) for INT, BEH, and OVR.
+*   4. Verify that the top-right displays the candidate's relative upload timestamp (e.g. "10m ago", "Yesterday").
+*   5. Select "Oldest First" in the sort dropdown and verify candidates are ordered by upload timestamp ascending.
+* **Expected Result:** Clean grid alignment of scores inside cards, relative timestamps render perfectly, and the oldest first option sorts correctly.
+* **Pass Criteria:** Scores and relative timestamps are rendered correctly, layout fits without wrapping bugs, and both newest/oldest first sorting filters work.
+
+### Definition of Done
+- [x] All tasks complete.
+- [x] Smoke test passes.
+- [x] All docs updated.
+
+---
+
+## Phase 13: Job-level Interview Invitation Link Validity
+* **Goal:** Shift invitation link validity configuration from per-candidate settings to a per-job basis in the job creation/publishing form. When a job is posted with a validity period (e.g., 2 days), all subsequent invitation links generated for that job will automatically inherit that duration.
+* **Prerequisites:** Phase 12 complete.
+
+- [x] Add `invite_expiry_value` and `invite_expiry_unit` to the `Job` database model and run migration.
+- [x] Update Job creation Pydantic schemas and `POST /api/jobs` endpoint to persist settings.
+- [x] Update `POST /api/interviews/{candidate_id}/invite` to retrieve the expiry settings from the job and calculate Redis TTL.
+- [x] Implement a custom glassmorphic "Link Expired" HTML warning landing page inside `/interview/{invite_token}` when the token is missing or expired.
+- [x] Add link validity input fields to the "Post Job" modal in `index.html`.
+- [x] Update `app.js` to send these settings on job creation and remove the per-candidate footer input controls.
+- [x] Add `test_invite_candidate_with_job_expiry` to `test_platform.py` to assert job-level link expiry is correctly fetched and applied to Redis TTL.
+
+### Smoke Test
+* **Test Name:** Job-level Expiry & Expired Link Rendering Test
+* **Steps:**
+*   1. Click on "+ Post Job" to open the job publishing form.
+*   2. Verify the presence of "Link Expiry Duration" and "Expiry Unit" inputs next to "Interview Duration".
+*   3. Enter `48` and select `Hours` (or `2` and `Days`), then submit the form to post the job.
+*   4. Shortlist a candidate and click "Invite for Interview".
+*   5. Verify that the invitation link is generated and Redis cache sets a TTL matching the job configuration (172800 seconds).
+*   6. Access the generated link in a new tab. Verify that the welcome page renders correctly.
+*   7. Delete the token from Redis manually or wait for the duration to pass. Refresh the tab.
+*   8. Verify that a beautiful glassmorphic "Link Expired" screen is displayed.
+* **Expected Result:** Invitation links respect the job-level configuration, and accessing expired links renders a premium "Link Expired" warning page.
+* **Pass Criteria:** UI inputs render correctly, job-level expirations are stored in Redis TTL, and expired tokens display the warning page.
+
+### Definition of Done
+- [x] All tasks complete.
+- [x] Smoke test passes.
+- [x] All docs updated.
+
+
+

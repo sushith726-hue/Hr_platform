@@ -76,3 +76,48 @@
 - Decision: Standardize on 'failed' (unreadable/corrupt files) and 'unable_to_process' (AI validation failure after 3 retries) states. Style failed candidate cards with red dashed borders, display detailed error parsing/ingestion messages in the resume matching report, fetch original resume PDF via S3 presigned URL inside an iframe in Panel 3 for immediate review, and add a 'Mark as Reviewed' action button updating status to 'manual_reviewed' so they can be re-routed into the pipeline.
 - Status: LOCKED
 
+## ADR-015: Deterministic LLM Inference Configuration Lock
+- Context: Ensure highly reproducible scoring and evaluation outcomes across all engine-specific LLM calls.
+- Decision: Hardcode model parameter configurations (temperature, seed, model type) as defined in the master architectural table:
+  - BB1 Job Rubric: temperature=0.1, seed=42
+  - BB2-B Resume Parser: temperature=0, seed=42
+  - BB3 Resume Scorer: temperature=0.1, seed=42
+  - LiveKit Voice Agent: temperature=0.3, seed=none
+  - BB5-A Technical Scorer: temperature=0.1, seed=42
+  - BB5-B Behavioral Scorer: temperature=0.2, seed=42
+  - BB6 Summary Generator: temperature=0.4, seed=42
+  To enforce this, insert standardized architect-review comments directly above each call block.
+- Status: LOCKED
+
+## ADR-016: Test Suite Hardening & Integration Integrity Controls
+- Context: Ensure the test suite handles database constraint validations, Pydantic response JSON serialization boundaries, and correct streaming content types without crashes or false positives.
+- Decision: Apply the following architectural rules in test suites:
+  1. *Relational Linkage:* Always instantiate and link mock parent models (`Job` and `Candidate`) inside PostgreSQL before creating dependent child records (such as `Interview`) to prevent relational database constraint exceptions.
+  2. *Strict Mock Attribute Assignment:* Explicitly declare properties on mock objects passed through API serialization endpoints to bypass JSON encoding errors on unconfigured `MagicMock` instances.
+  3. *Socket stream connection checks:* Validate stream connection checks against `/api/sse/batch/{id}` using stream-friendly configurations to check response headers without locking client request ports.
+- Status: LOCKED
+
+## ADR-017: Interview Status Tracker & CustomVoiceAgent Safety Refinements
+- Context:
+  1. Recruiters need a visual timeline in the candidate detail panel's header to track candidate progress (Invite Link Sent, Interview Started or No Show, and Interview Completed).
+  2. The custom voice agent needs to run safely without read-only attribute errors on `session` and without crashing WebRTC rooms during violation warnings.
+- Decision:
+  1. Implement a collapsible vertical stepper (`.status-tracker`) in the candidate profile header toggled by a new "#btn-interview-status" button. The tracker maps the candidate's database statuses (`interview_invited`, `interview_ongoing`, `interview_completed`, `rejected_post_interview`, `hired`) to 3 distinct visual milestones, highlighting "No Show" if they haven't started.
+  2. Override `session` in the custom agent using a private getter referencing a private attribute to prevent read-only property mutation errors during instantiation. Execute warnings and termination checks against a local state dictionary instead of calling violation tracker state to maintain connection safety.
+- Status: LOCKED
+
+## ADR-018: Middle Panel Top Section Expand & Collapse Toggling
+- Context:
+  1. Recruiter feedback indicated that when multiple resumes are being uploaded, parsed, or evaluated, the active job details header (`#active-job-info`) and the ingestion progress summary (`#upload-batch-summary`) occupy a large amount of vertical space.
+  2. This pushes the candidate card list downward, reducing overall visibility.
+  3. Furthermore, when the search header shifts up or down during toggles, it displaces the Collapse/Expand button, forcing recruiters to scan the screen to relocate it.
+- Decision:
+  1. Statically declare `<header class="search-header">` at the very top of the middle panel, with `#active-job-info` and `#upload-batch-summary` positioned directly below it.
+  2. Shrink search input and filter/sorting controls to a compact `32px` row layout to maximize the screen real estate allocated to candidate cards.
+  3. Place the Expand/Collapse button (`#btn-toggle-top-section`) in a fixed position on this top row, so it remains in the exact same location regardless of the collapsed/expanded state.
+  4. Use a CSS-driven approach: when collapsed, append the class `.top-collapsed` to `#middle-panel` to hide both `#active-job-info` and `#upload-batch-summary` and rotate the chevron icon.
+  5. Store the collapsed/expanded state in `localStorage` (`middle-top-collapsed`).
+- Status: LOCKED
+
+
+

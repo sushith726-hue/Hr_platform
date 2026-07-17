@@ -16,8 +16,9 @@ class Settings(BaseSettings):
     S3_ENDPOINT: str
     S3_ACCESS_KEY: str
     S3_SECRET_KEY: str
-    S3_BUCKET_NAME: str
+    S3_BUCKET: str
     S3_REGION: str = "us-east-1"
+    S3_VERIFY_SSL: bool = False
 
     # OpenAI Cognition
     OPENAI_API_KEY: str

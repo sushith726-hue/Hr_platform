@@ -11,3 +11,127 @@ build/
 graphify-out/cache/
 extract_semantic.py
 label_communities.py
+
+# ============================================
+# TALENTSTREAM SECRET & ENVIRONMENT SANITIZATION
+# ============================================
+
+# Environment files — NEVER commit real credentials
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+!.env.example
+
+# Python virtual environments
+venv/
+.venv/
+env/
+ENV/
+__pycycache__/
+*.py[cod]
+*$py.class
+.Python
+
+# IDE & OS files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs & databases
+*.log
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+
+# Compiled / build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+wheelhouse/
+
+# Test coverage & reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Celery & runtime
+celerybeat-schedule
+celerybeat.pid
+*.pid
+
+# Docker volumes (if local data persisted)
+postgres_data/
+redis_data/
+minio_data/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+
+# Audio / video files (large, generated)
+*.mp4
+*.mp3
+*.wav
+*.ogg
+*.webm
+*.m4a
+
+# PDF reports (generated, not source)
+reports/
+*.pdf
+
+# Resume uploads (candidate data — PII)
+resumes/
+uploads/
+
+# Node modules (if any frontend build)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Terraform / infrastructure (if present)
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars
+
+# Certificates & keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+ca-bundle.crt
+
+# Secrets scan — catch common patterns
+*secret*
+*password*
+*credential*
+*api_key*
+*token*
+!*example*
+!*template*
+!*mock*
+!*dummy*
+!*fake*
+!*test*
+
+test_*.py

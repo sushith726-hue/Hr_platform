@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15-alpine
@@ -48,7 +46,9 @@ services:
   ai-worker:
     build: .
     container_name: talentstream_ai_worker
-    command: celery -A backend.workers.tasks.celery_app worker -Q ai-worker --loglevel=info
+    # FIX 4: Also consume audio-worker queue so BB6 (generate_report) always has a consumer
+    # even if queue routing is later changed back. Belt-and-suspenders.
+    command: celery -A backend.workers.tasks.celery_app worker -Q ai-worker,audio-worker --loglevel=info -n ai-worker@%h
     volumes:
       - .:/app
     env_file:
@@ -62,7 +62,8 @@ services:
   audio-worker:
     build: .
     container_name: talentstream_audio_worker
-    command: celery -A backend.workers.tasks.celery_app worker -Q audio-worker --loglevel=info
+    # FIX 4: Also consume ai-worker queue as redundancy
+    command: celery -A backend.workers.tasks.celery_app worker -Q audio-worker,ai-worker --loglevel=info -n audio-worker@%h
     volumes:
       - .:/app
     env_file:
@@ -73,5 +74,38 @@ services:
       redis:
         condition: service_healthy
 
+  minio:
+    image: minio/minio:latest
+    container_name: talentstream_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpass
+    command: server /data --console-address ":9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  createbuckets:
+    image: minio/mc:latest
+    container_name: talentstream_mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadminpass;
+      /usr/bin/mc mb myminio/livekit-bucket || true;
+      /usr/bin/mc anonymous set public myminio/livekit-bucket || true;
+      exit 0;
+      "
+
 volumes:
   pgdata:
+  miniodata:

@@ -1,5 +1,60 @@
 # TalentStream Changelog
 
+## v0.14.0 — Recruiter-Configurable Interview Invitation Link Validity (2026-07-15)
+- [ADDED]: Configurable expiration duration selector (inputs for numeric values and hours/days dropdown) in the recruiter dashboard invitation controls (Panel 3 footer).
+- [ADDED]: API support for an optional `expiry_seconds` query parameter in the candidate invite POST endpoint `/api/interviews/{candidate_id}/invite`.
+- [ADDED]: Redis TTL management that sets token validity based on the recruiter's chosen duration, falling back to the 24h default.
+- [ADDED]: Custom glassmorphic "Link Expired" HTML warning landing page served directly on expired/invalid/missing tokens.
+- [ADDED]: Integration tests in `test_platform.py` verifying custom invite expirations, Redis TTL configuration, active landing access, and expired link rendering.
+- Files: `hr-platform/backend/main.py`, `hr-platform/frontend/static/app.js`, `hr-platform/frontend/templates/interview_landing.html`, `hr-platform/test_platform.py`, `docs/bhagavadgeetha.md`
+- Status: COMPLETED
+
+## v0.13.0 — Comprehensive Candidate Card Scoring Summary & Relative Timestamp (2026-07-15)
+- [ADDED]: Multi-Score display tags directly on candidate cards in the middle panel showing CV (Resume), INT (Interview), BEH (Behavioral), and OVR (Overall) scores.
+- [ADDED]: Placeholder display (`–`) for uncompleted interview/behavioral stages to ensure professional consistency and clean aesthetics.
+- [ADDED]: Relative timestamp display (e.g. "10m ago", "Yesterday") at the top-right of candidate cards, replacing the redundant circular score circle.
+- [ADDED]: "Oldest First" sorting option (`date_asc`) to both frontend sort dropdown and backend query filters.
+- [MODIFIED]: `.candidate-card-actions` position in `style.css` to `right: 8px;` so it sits perfectly inline with the new layout on hover.
+- [MODIFIED]: `/api/candidates` backend endpoint to pre-fetch and include `vic_score` and `bc_score` alongside standard database fields in candidate payloads.
+- Files: `hr-platform/backend/main.py`, `hr-platform/frontend/static/index.html`, `hr-platform/frontend/static/app.js`, `hr-platform/frontend/static/style.css`, `docs/bhagavadgeetha.md`
+- Status: COMPLETED
+
+## v0.12.1 — Middle Panel Expand & Collapse Controls (2026-07-15)
+- [ADDED]: Compact single-row layout (`32px` height) for search input and filter/sort controls at the very top of the middle panel.
+- [ADDED]: Fixed position Expand/Collapse button (`#btn-toggle-top-section`) on this top row that stays stationary during toggles.
+- [ADDED]: CSS class toggling (`.top-collapsed`) to instantly hide/show both the active job details header and the ingestion progress summary.
+- [ADDED]: Persistent state mapping using `localStorage` to preserve recruiter layout preferences.
+- Files: `hr-platform/frontend/static/index.html`, `hr-platform/frontend/static/style.css`, `hr-platform/frontend/static/app.js`
+- Status: COMPLETED
+
+## v0.12.0 — Interview Tracker Integration & Safety Refinements (2026-07-14)
+- [ADDED]: Shopping-app-style vertical timeline stepper showing three interview milestones in the profile detail header.
+- [ADDED]: Toggleable collapsible timeline container driven by `#btn-interview-status` click handlers and integrated with candidate selections.
+- [FIXED]: CustomVoiceAgent session override properties to prevent read-only attribute mutation exceptions.
+- [FIXED]: Refactored violation handling inside CustomVoiceAgent to reference local state dictionaries, ensuring stable WebRTC audio sessions.
+- Files: `hr-platform/frontend/static/index.html`, `hr-platform/frontend/static/style.css`, `hr-platform/frontend/static/app.js`, `hr-platform/agent/livekit_agent.py`
+- Status: COMPLETED
+
+## v0.11.0 — Adversarial Security Integration & Test Suite Hardening (2026-07-13)
+- [ADDED]: Integration validation for all 8 security threat phases of the TalentStream platform.
+- [FIXED]: Resolved MagicMock JSON serialization issue by explicitly declaring candidate properties during FastAPI router encoding.
+- [FIXED]: Resolved database `NotNullViolation` integrity constraint error by creating job and candidate mock entities prior to Celery audio tasks.
+- [FIXED]: Corrected SSE server-sent events connection check path to `/api/sse/batch/{id}` and stream connection management.
+- [ADDED]: Fully populated test checklists (`TEST_CHECKLIST.md`), comprehensive audit logs (`TEST_RESULTS.md`), and updated testing guidelines (`TESTING_GUIDE.md`).
+- Files: `hr-platform/test_platform.py`, `test_platform.py`, `docs/TEST_RESULTS.md`, `docs/TEST_CHECKLIST.md`, `docs/TESTING_GUIDE.md`
+- Reason: Finalize adversarial testing gates, achieve 100% test pass rate, and document audit trails.
+- Status: COMPLETED
+
+## v0.10.0 — Deterministic LLM Inference Configuration Lock (2026-07-10)
+- [ADDED]: Hardcoded finalized model parameters (`temperature` and `seed`) across all LLM call sites (BB1-BB6, LiveKit).
+- [ADDED]: Mandatory architect-review comment blocks directly above LLM call sites to prevent configuration drift.
+- [MODIFIED]: Indentation and code formatting cleanups in `backend/workers/tasks.py` and `backend/main.py`.
+- [MODIFIED]: Synchronized prompts library definitions in `prompts/` and `docs/bhagavadgeetha.md` Section 13 & Section 4.
+- [ADDED]: ADR-015 in `implementation/decisions.md` documenting LLM configuration lock.
+- Files: `hr-platform/backend/main.py`, `hr-platform/backend/workers/tasks.py`, `hr-platform/agent/livekit_agent.py`, `docs/bhagavadgeetha.md`, `prompts/*`, `implementation/decisions.md`
+- Reason: Enforce deterministic pipelines and guarantee reproducible candidate evaluations.
+- Status: COMPLETED
+
 ## v0.9.0 — Resume Failure Pipeline Hardening & Manual Review Workflow (2026-07-09)
 - [ADDED]: Secure endpoint `GET /api/candidates/{id}/resume-url` to generate presigned S3 URLs for viewing original resumes.
 - [ADDED]: Candidate status transitions for `failed` and `manual_reviewed` in status updating endpoint.
